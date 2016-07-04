@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.gamecard">
+
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <!-- GET_ACCOUNTS is necessary to display email address of logged in user. This permission is optional -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <!-- Google Play filtering -->
+    <uses-feature
+        android:name="android.hardware.wifi.direct"
+        android:required="true" />
+
+    <application
+        android:name=".utility.AppController"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher_game_center"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".view.LogInActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+
+        <activity
+            android:name=".view.HomeView"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".view.AppDetailsActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".view.PeerList"
+            android:label="@string/title_activity_peer_list"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <service
+            android:name=".utility.FileSendService"
+            android:exported="false" />
+
+        <receiver
+            android:name=".utility.BluetoothBroadcastReciver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED"/>
+                <action android:name="BluetoothDevice.ACTION_FOUND"/>
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".view.BluetoothView"
+            android:label="@string/title_activity_bluethooth_view"
+            android:theme="@style/AppTheme.NoActionBar">
+
+        </activity>
+    </application>
+
+</manifest>

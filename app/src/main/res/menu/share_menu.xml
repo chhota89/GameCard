@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Wifi"
+        android:id="@+id/wifi"
+        android:checkable="false"
+        android:icon="@drawable/abc_btn_radio_to_on_mtrl_015" />
+
+    <item android:title="Bluetooth"
+        android:id="@+id/bluetooth"
+        android:checkable="false"
+        android:icon="@drawable/abc_ic_star_black_16dp" />
+</menu>

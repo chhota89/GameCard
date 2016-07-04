@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Game Center</string>
+    <string name="facebook_app_id">591269367706974</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="title_activity_collapsing_toolbar">CollapsingToolbar</string>
+    <string name="empty">Game Center</string>
+    <string name="title_activity_app_details">AppDetailsActivity</string>
+    <string name="title_activity_peer_list">PeerList</string>
+    <string name="reciveFile">Receive File</string>
+    <string name="title_activity_bluethooth_view">BluethoothView</string>
+
+    <string-array name="set_profile_menu">
+        <item>Camera</item>
+        <item>Gallery</item>
+        <item>Cancel</item>
+    </string-array>
+
+</resources>

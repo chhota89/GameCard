@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".view.AppDetailsActivity">
+
+    <item
+        android:title="WiFi direct"
+        app:showAsAction="always"
+        android:icon="@mipmap/ic_wifi_white_48dp"
+        android:id="@+id/wifi"
+        android:visible="true" />
+
+    <item
+        android:title="Bluetooth"
+        app:showAsAction="always"
+        android:icon="@mipmap/ic_bluetooth_searching_white_48dp"
+        android:id="@+id/bluetooth"
+        android:visible="true" />
+
+    <item android:title="Store"
+        android:icon="@drawable/ic_shop_white"
+        app:showAsAction="ifRoom"
+        android:visible="true"
+        android:id="@+id/store" />
+</menu>

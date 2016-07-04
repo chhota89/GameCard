@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_player_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".view.HomeView"
+    tools:showIn="@layout/activity_home_view">
+
+
+    <TextView
+        android:text="@string/reciveFile"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/reciveFile"
+        app:layout_constraintLeft_toRightOf="@+id/imageView"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintTop_toTopOf="@+id/content_player_view"
+        android:layout_marginTop="16dp" />
+
+    <ImageView
+        android:src="@drawable/abc_ratingbar_indicator_material"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:id="@+id/imageView"
+        app:layout_constraintLeft_toLeftOf="@+id/content_player_view"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintTop_toTopOf="@+id/content_player_view"
+        android:layout_marginTop="8dp" />
+
+    <com.kyleduo.switchbutton.SwitchButton
+        android:id="@+id/switchButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/SwitchButtonStyleMD"
+        app:kswTintColor="#16A560"
+        app:layout_constraintTop_toTopOf="@+id/content_player_view"
+        android:layout_marginTop="8dp"
+        app:layout_constraintRight_toRightOf="@+id/content_player_view"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/appRecycleView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        app:layout_constraintLeft_toLeftOf="@+id/content_player_view"
+        app:layout_constraintTop_toBottomOf="@+id/imageView"
+        android:layout_marginTop="8dp">
+    </android.support.v7.widget.RecyclerView>
+
+    <!--<xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller
+        android:id="@+id/fast_scroller"
+        android:layout_width="@dimen/however_wide_you_want_this"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true" />-->
+
+</android.support.constraint.ConstraintLayout>
