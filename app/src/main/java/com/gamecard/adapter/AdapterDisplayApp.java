@@ -3,8 +3,11 @@ package com.gamecard.adapter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
+import android.support.v4.util.LruCache;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,12 +31,34 @@ public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
     List<Object> applicationInfos;
     PackageManager packageManager;
     Context context;
+    LruCache<String,Drawable> cache;
+    private static final String TAG="AdapterDisplayApp";
 
     public AdapterDisplayApp(List<Object> applicationInfos, Context context) {
         this.applicationInfos = applicationInfos;
         inflater = LayoutInflater.from(context);
         packageManager = context.getPackageManager();
         this.context=context;
+
+        //Find out maximum memory available to application
+        //1024 is used because LruCache constructor takes int in kilobytes
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+        // Use 1/4th of the available memory for this memory cache.
+        final int cacheSize = maxMemory / 4;
+        Log.d(TAG, "max memory " + maxMemory + " cache size " + cacheSize);
+
+                // LruCache takes key-value pair in constructor
+                // key is the string to refer bitmap
+                // value is the stored bitmap
+        cache = new LruCache<String, Drawable>(cacheSize) /*{
+            @Override
+            protected int sizeOf(String key, Drawable drawable) {
+                // The cache size will be measured in kilobytes
+                return drawable.b / 1024;
+            }
+        }*/;
+
     }
 
     @Override
@@ -59,7 +84,15 @@ public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
                 holder.appName.setText(((ApplicationInfo) applicationInfos.get(position)).loadLabel(packageManager).toString().substring(0, 7) + "..");
             else
                 holder.appName.setText(((ApplicationInfo) applicationInfos.get(position)).loadLabel(packageManager));
-            holder.appImage.setImageDrawable(((ApplicationInfo) applicationInfos.get(position)).loadIcon(packageManager));
+            Drawable drawable=cache.get(((ApplicationInfo) applicationInfos.get(position)).packageName);
+            if(drawable!=null)
+                holder.appImage.setImageDrawable(drawable);
+            else {
+                drawable=((ApplicationInfo) applicationInfos.get(position)).loadIcon(packageManager);
+                cache.put(((ApplicationInfo) applicationInfos.get(position)).packageName, drawable);
+                holder.appImage.setImageDrawable(drawable);
+            }
+
 
         } else {
             MoreViewHolder moreViewHolder = (MoreViewHolder) holder1;

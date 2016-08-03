@@ -29,22 +29,27 @@ public class BluetoothBroadcastReciver extends BroadcastReceiver {
         if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
             //Listen to the bluetooth change action
             final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+            boolean flag=false;
             switch(state) {
                 case BluetoothAdapter.STATE_OFF:
+                    flag=false;
                     break;
                 case BluetoothAdapter.STATE_TURNING_OFF:
+                    flag=false;
                     break;
                 case BluetoothAdapter.STATE_ON:
+                    flag=true;
                     break;
                 case BluetoothAdapter.STATE_TURNING_ON:
+                    flag=true;
                     break;
             }
+            callBackBluetooth.deviceState(flag);
         }else if(BluetoothDevice.ACTION_FOUND.equals(action)){
             // When discovery finds a device
 
             // Get the BluetoothDevice object from the Intent
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            String acc=device.getName();
             callBackBluetooth.addDevice(device);
         }
     }

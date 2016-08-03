@@ -5,7 +5,9 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by bridgeit on 29/6/16.
@@ -13,14 +15,14 @@ import java.util.List;
 
 public class ApplicationUtility {
 
-    public static List<Object> getInstallApp(List<ApplicationInfo> allApp) {
-        List<Object> installAppList = new ArrayList<>();
+    public static Map<String,ApplicationInfo> getInstallApp(List<ApplicationInfo> allApp) {
+        Map<String,ApplicationInfo> applicationInfoMap=new HashMap<>();
         for (ApplicationInfo applicationInfo : allApp) {
             if (!isSystemPackage(applicationInfo)) {
-                installAppList.add(applicationInfo);
+                applicationInfoMap.put(applicationInfo.packageName,applicationInfo);
             }
         }
-        return installAppList;
+        return applicationInfoMap;
     }
 
     public static List<ApplicationInfo> getAllPackages(Context context) {
@@ -32,5 +34,7 @@ public class ApplicationUtility {
     private static boolean isSystemPackage(ApplicationInfo applicationInfo) {
         return ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
     }
+
+
 
 }

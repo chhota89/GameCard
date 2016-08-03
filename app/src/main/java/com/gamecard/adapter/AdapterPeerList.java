@@ -6,6 +6,7 @@ import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.gamecard.R;
@@ -59,6 +60,7 @@ public class AdapterPeerList extends RecyclerView.Adapter<PeerViewHolder> {
     public void onBindViewHolder(PeerViewHolder holder, int position) {
         holder.device_name.setText(devices.get(position).deviceName);
         holder.device_details.setText(getDeviceStatus(devices.get(position).status));
+        holder.send.setVisibility(View.INVISIBLE);
         if(devices.get(position).status ==WifiP2pDevice.CONNECTED){
             if(Build.VERSION.SDK_INT>=23)
                 holder.device_details.setTextColor(ContextCompat.getColor(context,R.color.green));

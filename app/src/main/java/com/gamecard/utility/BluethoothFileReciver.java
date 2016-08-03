@@ -1,6 +1,9 @@
 package com.gamecard.utility;
 
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,90 +11,93 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
-import java.io.BufferedOutputStream;
+import com.gamecard.R;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
-
+import java.util.UUID;
 
 /**
- * Purpose:
- * 1 Open soket that is wait unit connection established.
- * 2 receive the file from connection
- * 3 Save the file in particular directory.
- * <p>
- * Created by bridgeit on 28/6/16.
+ * Created by bridgeit on 8/7/16.
  */
 
-public class FileServerAsyncTask extends AsyncTask<String, Void, String> {
+public class BluethoothFileReciver extends AsyncTask<String, Void, String> {
 
-    private static final String TAG = "FileServerAsyncTask";
+    private BluetoothServerSocket mmServerSocket;
+
+    private static final String TAG = "WiFiFileReceiver";
     String FILE_NAME = "";
     ProgressDialog progressDialog;
     private Context context;
+    File file;
 
-    public FileServerAsyncTask(Context context) {
+    public BluethoothFileReciver(Context context, BluetoothAdapter adapter) {
         this.context = context;
         progressDialog = new ProgressDialog(context);
         progressDialog.setMessage("Downloading the file");
+
+        // Use a temporary object that is later assigned to mmServerSocket,
+        // because mmServerSocket is final
+
+        BluetoothServerSocket tmp = null;
+        try {
+            // MY_UUID is the app's UUID string, also used by the client code
+            tmp = adapter.listenUsingRfcommWithServiceRecord("NAME", UUID.fromString(context.getString(R.string.uuid)));
+        } catch (IOException e) {
+        }
+        mmServerSocket = tmp;
     }
 
     @Override
     protected String doInBackground(String... params) {
+
         try {
 
             /**
              * Create a server socket and wait for client connections. This
              * call blocks until a connection is accepted from a client
              */
-            ServerSocket serverSocket = new ServerSocket(8888);
-            Socket client = serverSocket.accept();
+
+            BluetoothSocket socket = null;
+            // Keep listening until exception occurs or a socket is returned
+            try {
+                socket = mmServerSocket.accept();
+            } catch (IOException e) {
+            }
 
             //start showing progress dialog
             publishProgress();
 
-            /**
-             * If this code is reached, a client has connected and transferred data
-             * Save the input stream from the client as a .apk file
-             */
+            //If this code is reached, a client has connected and transferred data
+            //Save the input stream from the client as a .apk file
             FILE_NAME = "" + System.currentTimeMillis() + ".apk";
-            final File f = new File(Environment.getExternalStorageDirectory() + "/"
+            file = new File(Environment.getExternalStorageDirectory() + "/"
                     + context.getPackageName() + "/" + FILE_NAME);
 
-            File dirs = new File(f.getParent());
+            File dirs = new File(file.getParent());
             if (!dirs.exists())
                 dirs.mkdirs();
-            f.createNewFile();
-            InputStream inputstream = client.getInputStream();
-            copyFile(inputstream, new FileOutputStream(f));
-            serverSocket.close();
-            return f.getAbsolutePath();
+            file.createNewFile();
+            InputStream inputstream = socket.getInputStream();
+
+            FileUtility.copyFile(inputstream, new FileOutputStream(file));
+
+            return file.getAbsolutePath();
         } catch (IOException e) {
             Log.e(TAG, e.getMessage());
-            return null;
+            return file.getAbsolutePath();
+        }finally {
+            if(mmServerSocket!=null)
+                try {
+                    mmServerSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
     }
 
-    private void copyFile(InputStream inputstream, FileOutputStream fileOutputStream) throws IOException {
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        InputStreamReader isr = new InputStreamReader(inputstream);
-        BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream);
-        while (true) {
-            bytesRead = inputstream.read(buffer, 0, buffer.length);
-            if (bytesRead == -1) {
-                break;
-            }
-            bos.write(buffer, 0, bytesRead);
-            bos.flush();
-
-        }
-        bos.close();
-    }
 
     @Override
     protected void onProgressUpdate(Void... progress) {

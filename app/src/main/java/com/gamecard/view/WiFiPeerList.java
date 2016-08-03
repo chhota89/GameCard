@@ -17,6 +17,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.provider.Settings;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -33,7 +36,7 @@ import com.gamecard.adapter.AdapterPeerList;
 import com.gamecard.callback.CallBackWifiBroadcast;
 import com.gamecard.callback.ClickListener;
 import com.gamecard.utility.FileSendService;
-import com.gamecard.utility.FileServerAsyncTask;
+import com.gamecard.utility.WiFiFileReceiver;
 import com.gamecard.utility.RecyclerTouchListner;
 import com.gamecard.utility.WiFiDirectBroadcastReceiver;
 
@@ -41,9 +44,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerListListener, CallBackWifiBroadcast {
+public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.PeerListListener, CallBackWifiBroadcast {
 
-    private static final String TAG = "PeerList";
+    private static final String TAG = "WiFiPeerList";
     private static final int PORT = 8888;
     private final IntentFilter intentFilter = new IntentFilter();
     RecyclerView recyclerView;
@@ -52,11 +55,14 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
     WifiP2pInfo wifiP2pInfo;
     WifiP2pDevice device;
     Button send;
+    boolean wifiIsOn=false;
     ProgressDialog mProgressDialog;
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
     private WifiP2pManager manager;
     private ApplicationInfo applicationInfo;
+    ProgressDialog progressDialog;
+    CoordinatorLayout coordinatorLayout;
 
 
     @Override
@@ -64,26 +70,22 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_peer_list);
 
-        applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+        coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout) ;
 
+        applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+        progressDialog = new ProgressDialog(WiFiPeerList.this);
+        progressDialog.setMessage("Searching ...");
+        progressDialog.setCancelable(true);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         send = (Button) findViewById(R.id.send);
 
-        //Initialize the progress dialog
-        mProgressDialog = new ProgressDialog(PeerList.this);
-        mProgressDialog.setMessage("Sending .....");
-        mProgressDialog.setIndeterminate(false);
-        mProgressDialog.setMax(100);
-        mProgressDialog.setProgressNumberFormat(null);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-
         //Setting the recycle view
         deviceList = new ArrayList<>();
         recyclerView = (RecyclerView) findViewById(R.id.peerList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapterPeerList = new AdapterPeerList(PeerList.this, deviceList);
+        adapterPeerList = new AdapterPeerList(WiFiPeerList.this, deviceList);
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapterPeerList);
 
@@ -99,13 +101,13 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
                     public void onSuccess() {
                         device = deviceList.get(position);
                         // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
-                        Toast.makeText(PeerList.this, "Request send successfully.",
+                        Toast.makeText(WiFiPeerList.this, "Request send successfully.",
                                 Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onFailure(int reason) {
-                        Toast.makeText(PeerList.this, "Connect failed. Retry.",
+                        Toast.makeText(WiFiPeerList.this, "Connect failed. Retry.",
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -124,13 +126,13 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
+        manager.removeGroup(channel,null);
         searchPerer();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.i(TAG, "onResume: ...........................");
         receiver = new WiFiDirectBroadcastReceiver(manager, channel, this, this);
         registerReceiver(receiver, intentFilter);
 
@@ -144,20 +146,35 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
 
     //Showing wifi message
     public void setIsWifiP2pEnabled(boolean status) {
-        if (!status)
-            Toast.makeText(PeerList.this, "Turn on the wifi", Toast.LENGTH_LONG).show();
+        if (!status){
+            wifiIsOn=false;
+            turnOnWiFi();
+        } else {
+            wifiIsOn=true;
+        }
+    }
+
+    private void turnOnWiFi() {
+        Snackbar.make(coordinatorLayout, getString(R.string.turn_on_wifi), Snackbar.LENGTH_LONG)
+                .setAction("turn on", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                    }
+                }).show();
     }
 
     //starting the services
     public void updateDevice(WifiP2pDevice device) {
-        if(device.status==WifiP2pDevice.CONNECTED){
+
+        /*if(device.status==WifiP2pDevice.CONNECTED){
             if(device.isGroupOwner()){
-                Toast.makeText(PeerList.this,"Is connected and Group owner",Toast.LENGTH_LONG).show();
+                Toast.makeText(WiFiPeerList.this,"Is connected and Group owner",Toast.LENGTH_LONG).show();
             }
             else{
-                Toast.makeText(PeerList.this,"Is connected NOT Group owner",Toast.LENGTH_LONG).show();
+                Toast.makeText(WiFiPeerList.this,"Is connected NOT Group owner",Toast.LENGTH_LONG).show();
             }
-        }
+        }*/
     }
 
 
@@ -170,7 +187,7 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
     //This method is called when peer is available
     @Override
     public void onPeersAvailable(WifiP2pDeviceList peers) {
-
+        progressDialog.hide();
         deviceList.clear();
         deviceList.addAll(peers.getDeviceList());
         adapterPeerList.notifyDataSetChanged();
@@ -194,21 +211,24 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
     }
 
     public void searchPerer() {
-        //start searching for peers
-        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+        if(wifiIsOn){
+            //start searching for peers
+            progressDialog.show();
+            manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
 
-            @Override
-            public void onSuccess() {
-                Toast.makeText(PeerList.this, "Discovery Initiated",
-                        Toast.LENGTH_SHORT).show();
-            }
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(WiFiPeerList.this, "Discovery Initiated",
+                            Toast.LENGTH_SHORT).show();
+                }
 
-            @Override
-            public void onFailure(int reasonCode) {
-                Toast.makeText(PeerList.this, "Discovery Failed : " + reasonCode,
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onFailure(int reasonCode) {
+                    Toast.makeText(WiFiPeerList.this, "Discovery Failed : " + reasonCode,
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     public void sendFile(View view) {
@@ -226,26 +246,31 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
                 protected void onReceiveResult(int resultCode, final Bundle resultData) {
                     if (resultCode == PORT) {
                         if (mProgressDialog != null) {
-                            if (!mProgressDialog.isShowing())
-                                mProgressDialog.show();
 
-                           /*if(resultData.getInt("Progress",0) < 99){*/
                             int percentage = resultData.getInt("Progress", 0);
                             mProgressDialog.setProgress(percentage);
-                           /*}else{
-                               if(mProgressDialog.isShowing())
-                                    mProgressDialog.hide();
-                           }*/
 
-                            if (percentage == 100)
+                            if (percentage == 100) {
                                 mProgressDialog.hide();
+                                mProgressDialog=null;
+                            }
+                        }
+                        else{
+                            //Initialize the progress dialog
+                            mProgressDialog = new ProgressDialog(WiFiPeerList.this);
+                            mProgressDialog.setMessage("Sending ..... "+applicationInfo.loadLabel(getPackageManager()));
+                            mProgressDialog.setIndeterminate(false);
+                            mProgressDialog.setMax(100);
+                            mProgressDialog.setProgressNumberFormat(null);
+                            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                            mProgressDialog.show();
                         }
                     }
                 }
             });
             startService(fileSendService);
         } else {
-            Toast.makeText(PeerList.this, "First Connect the device", Toast.LENGTH_SHORT).show();
+            Toast.makeText(WiFiPeerList.this, "First Connect the device", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -255,12 +280,12 @@ public class PeerList extends AppCompatActivity implements WifiP2pManager.PeerLi
         this.wifiP2pInfo = wifiInfo;
         this.device = device;
         if (wifiInfo.groupFormed) {
-            FileServerAsyncTask fileServerAsyncTask = new FileServerAsyncTask(PeerList.this);
+            WiFiFileReceiver wiFiFileReceiver = new WiFiFileReceiver(WiFiPeerList.this);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                fileServerAsyncTask.executeOnExecutor(
+                wiFiFileReceiver.executeOnExecutor(
                         AsyncTask.THREAD_POOL_EXECUTOR, new String[]{null});
             } else
-                fileServerAsyncTask.execute();
+                wiFiFileReceiver.execute();
         }
 
         if (!wifiInfo.isGroupOwner) {

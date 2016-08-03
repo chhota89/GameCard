@@ -9,4 +9,6 @@ import android.bluetooth.BluetoothDevice;
 public interface CallBackBluetooth {
 
     void addDevice(BluetoothDevice device);
+    void deviceState(boolean flag);
+
 }

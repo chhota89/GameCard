@@ -15,7 +15,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.gamecard.R;
 import com.gamecard.utility.AnimationUtility;
@@ -75,7 +74,7 @@ public class AppDetailsActivity extends AppCompatActivity {
                 openPeerListActivity();
                 return true;
             case R.id.bluetooth:
-                openBluetooth();
+                openBluetoothPeerList();
                 return true;
             case android.R.id.home:
                 finish();
@@ -94,7 +93,7 @@ public class AppDetailsActivity extends AppCompatActivity {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.bluetooth:
-                        openBluetooth();
+                        openBluetoothPeerList();
                         return true;
                     case R.id.wifi:
                         openPeerListActivity();
@@ -108,7 +107,13 @@ public class AppDetailsActivity extends AppCompatActivity {
     }
 
     private void openPeerListActivity() {
-        Intent intent = new Intent(AppDetailsActivity.this, PeerList.class);
+        Intent intent = new Intent(AppDetailsActivity.this, WiFiPeerList.class);
+        intent.putExtra("APPLICATION", applicationInfo);
+        startActivity(intent);
+    }
+
+    private void openBluetoothPeerList() {
+        Intent intent = new Intent(AppDetailsActivity.this, BluetoothPeerList.class);
         intent.putExtra("APPLICATION", applicationInfo);
         startActivity(intent);
     }

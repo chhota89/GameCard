@@ -2,8 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:title="Item"
+    <item android:title="Search"
         android:icon="@drawable/abc_ic_search_api_mtrl_alpha"
         android:id="@id/search_button"
         app:showAsAction="always" />
+
+
+    <!--<item android:title="Recive"
+        android:icon="@drawable/abc_ic_menu_copy_mtrl_am_alpha"
+        android:id="@id/reciveFile"
+        app:showAsAction="always" />-->
 </menu>

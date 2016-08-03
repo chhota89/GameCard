@@ -52,7 +52,7 @@ public class FileSendService extends IntentService {
             socket.connect((new InetSocketAddress(wifiInfo.groupOwnerAddress, port)), 500);
 
             /**
-             * Create a byte stream from a JPEG file and pipe it to the output stream
+             * Create a byte stream from a apk file and pipe it to the output stream
              * of the socket. This data will be retrieved by the server device.
              */
             long total = 0;

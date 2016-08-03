@@ -11,7 +11,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 
 import com.gamecard.callback.CallBackWifiBroadcast;
 import com.gamecard.view.HomeView;
-import com.gamecard.view.PeerList;
+import com.gamecard.view.WiFiPeerList;
 
 /**
  * Created by bridgeit on 28/6/16.
@@ -57,8 +57,8 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             // Call WifiP2pManager.requestPeers() to get a list of current peers
             if (manager != null) {
-                if (activity instanceof PeerList)
-                    manager.requestPeers(channel, (PeerList) activity);
+                if (activity instanceof WiFiPeerList)
+                    manager.requestPeers(channel, (WiFiPeerList) activity);
                 if (activity instanceof HomeView)
                     manager.requestPeers(channel, (HomeView) activity);
             }

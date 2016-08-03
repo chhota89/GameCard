@@ -4,6 +4,8 @@ import android.animation.ObjectAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import java.util.HashSet;
+
 /**
  * Created by bridgeit on 27/6/16.
  */
@@ -21,4 +23,6 @@ public class AnimationUtility {
         animator.setDuration(1000);
         animator.start();
     }
+
+
 }

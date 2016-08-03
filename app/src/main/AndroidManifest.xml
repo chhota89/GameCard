@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -15,6 +18,8 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Google Play filtering -->
     <uses-feature
@@ -29,7 +34,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".view.LogInActivity">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -47,7 +51,7 @@
             android:name=".view.AppDetailsActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".view.PeerList"
+            android:name=".view.WiFiPeerList"
             android:label="@string/title_activity_peer_list"
             android:theme="@style/AppTheme.NoActionBar"></activity>
 
@@ -55,21 +59,29 @@
             android:name=".utility.FileSendService"
             android:exported="false" />
 
-        <receiver
+        <service
+            android:name=".utility.FIleSendBluetooth"
+            android:exported="false" />
+
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
+
+        <!--<receiver
             android:name=".utility.BluetoothBroadcastReciver"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.bluetooth.adapter.action.STATE_CHANGED"/>
                 <action android:name="BluetoothDevice.ACTION_FOUND"/>
             </intent-filter>
-        </receiver>
+        </receiver>-->
 
         <activity
-            android:name=".view.BluetoothView"
+            android:name=".view.BluetoothPeerList"
             android:label="@string/title_activity_bluethooth_view"
             android:theme="@style/AppTheme.NoActionBar">
 
         </activity>
+
+        <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
     </application>
 
 </manifest>

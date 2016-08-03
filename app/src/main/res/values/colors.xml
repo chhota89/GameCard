@@ -6,4 +6,6 @@
     <color name="black">#000000</color>
     <color name="green">#00ff00</color>
     <color name="textColorPrimary">#ffffff</color>
+    <color name="common_plus_signin_btn_text_dark_disabled">#FFAAAAAA</color>
+    <color name="sideColor">#ff8A65</color>
 </resources>

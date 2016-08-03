@@ -8,6 +8,9 @@
     <string name="title_activity_peer_list">PeerList</string>
     <string name="reciveFile">Receive File</string>
     <string name="title_activity_bluethooth_view">BluethoothView</string>
+    <string name="uuid">a1eb25fe-b87b-4a11-9727-ac5c91ab5aef</string>
+    <string name="permission_failure">Permission is Denided</string>
+    <string name="turn_on_wifi">Turn on P2P setting.</string>
 
     <string-array name="set_profile_menu">
         <item>Camera</item>
