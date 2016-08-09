@@ -3,11 +3,14 @@
 
     <item android:title="Wifi"
         android:id="@+id/wifi"
-        android:checkable="false"
-        android:icon="@drawable/abc_btn_radio_to_on_mtrl_015" />
+        android:checkable="false" />
 
     <item android:title="Bluetooth"
         android:id="@+id/bluetooth"
-        android:checkable="false"
-        android:icon="@drawable/abc_ic_star_black_16dp" />
+        android:checkable="false" />
+
+
+    <item android:title="Share"
+        android:id="@+id/share"
+        android:checkable="false" />
 </menu>

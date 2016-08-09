@@ -18,9 +18,9 @@ public class AnimationUtility {
         animator.start();
     }
 
-    public static void animatedGrid(RecyclerView.ViewHolder holder) {
-        ObjectAnimator animator = ObjectAnimator.ofFloat(holder.itemView, "translationY", 200, 200);
-        animator.setDuration(1000);
+    public static void animated(RecyclerView.ViewHolder holder,boolean goesDown,int postion){
+        ObjectAnimator animator=ObjectAnimator.ofFloat(holder.itemView,"translationY",goesDown==true ? 600 :-600,0);
+        animator.setDuration(400+(postion*40));
         animator.start();
     }
 

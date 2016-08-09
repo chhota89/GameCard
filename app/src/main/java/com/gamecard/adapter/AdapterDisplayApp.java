@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.gamecard.R;
+import com.gamecard.utility.AnimationUtility;
 import com.gamecard.viewholder.GameInfoViewHoldr;
 import com.gamecard.viewholder.MoreViewHolder;
 import com.gamecard.viewholder.ParentViewHolder;
@@ -33,6 +34,7 @@ public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
     Context context;
     LruCache<String,Drawable> cache;
     private static final String TAG="AdapterDisplayApp";
+    private  int previous=0;
 
     public AdapterDisplayApp(List<Object> applicationInfos, Context context) {
         this.applicationInfos = applicationInfos;
@@ -93,6 +95,12 @@ public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
                 holder.appImage.setImageDrawable(drawable);
             }
 
+            if(position>previous)
+                AnimationUtility.animated(holder,true,position);
+            else
+                AnimationUtility.animated(holder,false,position);
+
+            previous=position;
 
         } else {
             MoreViewHolder moreViewHolder = (MoreViewHolder) holder1;

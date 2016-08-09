@@ -11,6 +11,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -35,6 +38,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -61,12 +65,14 @@ import com.gamecard.utility.BluetoothBroadcastReciver;
 import com.gamecard.utility.CircleTransformation;
 import com.gamecard.utility.EditSharedPrefrence;
 import com.gamecard.utility.FacebookUtility;
+import com.gamecard.utility.LoadDbAsync;
 import com.gamecard.utility.RecyclerTouchListner;
 import com.gamecard.utility.WiFiDirectBroadcastReceiver;
 import com.gamecard.utility.WiFiFileReceiver;
 import com.kyleduo.switchbutton.SwitchButton;
 import com.soundcloud.android.crop.Crop;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -85,7 +91,7 @@ import io.realm.RealmResults;
 public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast, WifiP2pManager.PeerListListener, CallBackBluetooth {
 
     private static final String TAG = "HomeView";
-    private static final String mqttServerPath = "tcp://192.168.0.150:1883";
+    private static final String mqttServerPath = "tcp://52.66.116.176:1883";
     private static final int GALLERY_CODE = 214;
     private static final int REQUEST_ENABLE_BT = 215;
     private static final int BLUETOOTH_DISCOVRABLE = 216;
@@ -94,6 +100,9 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private static final int PIC_CROP = 221;
     private static final int TURN_ON_WIFI = 222;
     private static final int TAKE_READ_WRITE_PROFILE_STORAGE = 223;
+    public static final String NEW_PACKAGE_LIST="NEW_PACKAGE_LIST";
+    public static final String GAME_LIST="GAME_LIST";
+    public static final String APPLICATION_INFO_MAP="APPLICATION_INFO_MAP";
     private static final String CLIENT = MqttClient.generateClientId();
     private final String FACEBOOK_URL = "https://graph.facebook.com/";
     private final IntentFilter intentFilter = new IntentFilter();
@@ -117,13 +126,14 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     List<Object> gameList;
     AdapterDisplayApp adapterDisplayApp;
     Map<String, ApplicationInfo> applicationInfoMap;
-    List<String> packageList, dbList;
+    List<String> packageList;
     RealmResults<GameResponseModel> realmResults;
     private MqttAndroidClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        supportRequestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
         setContentView(R.layout.activity_home_view);
 
         //collapsingToolbarLayout.setBackground(getResources().getDrawable(R.drawable.background));
@@ -166,8 +176,9 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         setSupportActionBar(toolbar);
 
         collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapse_toolbar);
+
         //setting background for collapsing toolbar
-        /*Picasso.with(HomeView.this).load(R.drawable.background).into(new Target(){
+        Picasso.with(HomeView.this).load(R.drawable.background).into(new Target(){
 
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
@@ -183,7 +194,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onPrepareLoad(final Drawable placeHolderDrawable) {
                 Log.d("TAG", "Prepare Load");
             }
-        });*/
+        });
 
 
         toolbarTextAppernce();
@@ -304,17 +315,26 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         }
 
         gameList = new ArrayList<>();
-        adapterDisplayApp = new AdapterDisplayApp(gameList, HomeView.this);
-        applicationInfoMap = ApplicationUtility.getInstallApp(ApplicationUtility.getAllPackages(HomeView.this));
-        packageList = new ArrayList<String>(applicationInfoMap.keySet());
-        dbList = new ArrayList<>();
         gameList.add(0, "Discover new games");
+        adapterDisplayApp = new AdapterDisplayApp(gameList, HomeView.this);
 
-        // Build the query looking at all users:
-        //Note: make this as async
-        realmResults = realm.where(GameResponseModel.class).findAll();
-        displayList();
+        // Load data from local database.
+        new LoadDbAsync(HomeView.this){
+            @Override
+            protected void onPostExecute(Map<String, Object> responseMap) {
+                super.onPostExecute(responseMap);
+                List<ApplicationInfo> gameLisDisplay= (List<ApplicationInfo>) responseMap.get(HomeView.GAME_LIST);
+                gameList.addAll(gameLisDisplay);
+                adapterDisplayApp.notifyDataSetChanged();
+                applicationInfoMap= (Map<String, ApplicationInfo>) responseMap.get(HomeView.APPLICATION_INFO_MAP);
+                //check for new application is install or not
+                packageList=(List<String>) responseMap.get(HomeView.NEW_PACKAGE_LIST);
+                if(packageList.size()!=0) {
+                    loadDataFromRest();
+                }
 
+            }
+        }.execute();
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.appRecycleView);
         recyclerView.setHasFixedSize(true);
@@ -329,9 +349,10 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onClick(View view, int position) {
                 if (gameList.get(position) instanceof ApplicationInfo) {
                     Intent intent = new Intent(HomeView.this, AppDetailsActivity.class);
+                    if(position==1)
+                        intent=new Intent(HomeView.this, MainActivity.class);
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
                         ImageView imageView1 = (ImageView) view.findViewById(R.id.appLogo);
                         ActivityOptionsCompat options = ActivityOptionsCompat.
                                 makeSceneTransitionAnimation(HomeView.this, imageView1, imageView1.getTransitionName());
@@ -348,25 +369,6 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onLongClick(View view, int position) {
             }
         }));
-    }
-
-    private void displayList() {
-
-        //display game in the grid view
-        for (GameResponseModel gameResponseModel : realmResults) {
-            if (gameResponseModel.getIsgame()) {
-                if (applicationInfoMap.containsKey(gameResponseModel.getPackagename()))
-                    gameList.add(applicationInfoMap.get(gameResponseModel.getPackagename()));
-            }
-            dbList.add(gameResponseModel.getPackagename());
-        }
-
-        //Find the difference between database results  and install application
-        packageList.removeAll(dbList);
-
-        if (packageList.size() != 0)
-            loadDataFromRest();
-
     }
 
     private void loadDataFromRest() {
@@ -545,6 +547,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
 
     @Override
     public void setNetworkToReadyState(boolean b, WifiP2pInfo wifiInfo, WifiP2pDevice device) {
+
         if (wifiInfo.groupFormed) {
 
             //take permission and start reciver thread based on it
