@@ -59,6 +59,7 @@ import com.gamecard.controller.MqttController;
 import com.gamecard.controller.RestCall;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.model.PackageModel;
+import com.gamecard.utility.AppController;
 import com.gamecard.utility.ApplicationUtility;
 import com.gamecard.utility.BluethoothFileReciver;
 import com.gamecard.utility.BluetoothBroadcastReciver;
@@ -84,11 +85,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast, WifiP2pManager.PeerListListener, CallBackBluetooth {
+
+    @Inject
+    MqttAndroidClient client;
 
     private static final String TAG = "HomeView";
     private static final String mqttServerPath = "tcp://52.66.116.176:1883";
@@ -128,7 +134,6 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     Map<String, ApplicationInfo> applicationInfoMap;
     List<String> packageList;
     RealmResults<GameResponseModel> realmResults;
-    private MqttAndroidClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -349,8 +354,8 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onClick(View view, int position) {
                 if (gameList.get(position) instanceof ApplicationInfo) {
                     Intent intent = new Intent(HomeView.this, AppDetailsActivity.class);
-                    if(position==1)
-                        intent=new Intent(HomeView.this, MainActivity.class);
+                    /*if(position==1)
+                        intent=new Intent(HomeView.this, MainActivity.class);*/
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         ImageView imageView1 = (ImageView) view.findViewById(R.id.appLogo);
@@ -375,7 +380,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
 
         final PackageModel packageModel = new PackageModel(packageList);
         packageModel.setTopic(CLIENT);
-        client = new MqttAndroidClient(HomeView.this, mqttServerPath, CLIENT);
+        ((AppController)getApplication()).getMqttComponent().inject(this);
         final MqttController mqttController = new MqttController(CLIENT,client);
         //establish connection with mqtt server
         mqttController.connectToMqtt(new MqttController.CallBackConnectMqtt() {
@@ -389,7 +394,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                         //response receive from mqtt server
                         if (gameResponseModel.getIsgame() && applicationInfoMap.containsKey(gameResponseModel.getPackagename())) {
                             gameList.add(applicationInfoMap.get(gameResponseModel.getPackagename()));
-                            adapterDisplayApp.notifyDataSetChanged();
+                            adapterDisplayApp.notifyItemInserted(gameList.size()-1);
                         }
                     }
 
@@ -400,7 +405,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                 });
 
                 //make rest call to find the game from package List
-                RestCall.sendPackageList(packageModel);
+                new RestCall(HomeView.this).sendPackageList(packageModel);
             }
 
             @Override

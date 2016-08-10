@@ -6,7 +6,9 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.gamecard.model.GameResponseModel;
+import com.gamecard.model.VedioImageLinkModel;
 import com.gamecard.view.HomeView;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,11 +62,11 @@ public class LoadDbAsync extends AsyncTask<Void, Void, Map<String,Object>> {
 
     private void genrateList(RealmResults<GameResponseModel> realmResults) {
 
-
-
         //display game in the grid view
         for (GameResponseModel gameResponseModel : realmResults) {
             if (gameResponseModel.getIsgame()) {
+                Log.i(TAG, gameResponseModel.getPackagename()+" ++++ "+gameResponseModel.getJsonImageVedioLink());
+                VedioImageLinkModel vedioImageLinkModel=new Gson().fromJson(gameResponseModel.getJsonImageVedioLink(),VedioImageLinkModel.class);
                 if (applicationInfoMap.containsKey(gameResponseModel.getPackagename()))
                     gameList.add(applicationInfoMap.get(gameResponseModel.getPackagename()));
             }

@@ -3,6 +3,13 @@ package com.gamecard.utility;
 import android.app.Application;
 
 import com.facebook.FacebookSdk;
+import com.gamecard.dagger.component.DaggerMqttComponent;
+import com.gamecard.dagger.component.DaggerNetComponent;
+import com.gamecard.dagger.component.MqttComponent;
+import com.gamecard.dagger.component.NetComponent;
+import com.gamecard.dagger.module.AppModule;
+import com.gamecard.dagger.module.MqttModule;
+import com.gamecard.dagger.module.NetModule;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -12,6 +19,10 @@ import io.realm.RealmConfiguration;
  */
 
 public class AppController extends Application {
+
+    private NetComponent mNetComponent;
+
+    private MqttComponent mqttComponent;
 
     @Override
     public void onCreate() {
@@ -24,5 +35,26 @@ public class AppController extends Application {
                 .deleteRealmIfMigrationNeeded()
                 .build();
         Realm.setDefaultConfiguration(realmConfiguration);
+
+        mNetComponent = DaggerNetComponent.builder()
+                .appModule(new AppModule(this))
+                .netModule(new NetModule("http://gamecarddemo.herokuapp.com/"))
+                .build();
+
+        mqttComponent= DaggerMqttComponent.builder()
+                .appModule(new AppModule(this))
+                .mqttModule(new MqttModule())
+                .build();
     }
+
+    public NetComponent getmNetComponent() {
+        return mNetComponent;
+    }
+
+    public MqttComponent getMqttComponent() {
+        return mqttComponent;
+    }
+
+
+
 }

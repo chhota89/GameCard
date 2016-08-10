@@ -28,9 +28,9 @@ public class GameResponseModel extends RealmObject{
 
     private Boolean isgame;
 
-    public GameResponseModel(){
+    private String jsonImageVedioLink;
 
-    }
+
 
     /**
      *
@@ -192,5 +192,17 @@ public class GameResponseModel extends RealmObject{
      */
     public void setIsgame(Boolean isgame) {
         this.isgame = isgame;
+    }
+
+    public String getJsonImageVedioLink() {
+        return jsonImageVedioLink;
+    }
+
+    public void setJsonImageVedioLink(String jsonImageVedioLink) {
+        this.jsonImageVedioLink = jsonImageVedioLink;
+    }
+
+    public GameResponseModel(){
+
     }
 }
