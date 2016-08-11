@@ -44,10 +44,16 @@
 
         <activity
             android:name=".view.HomeView"
-            android:theme="@style/AppTheme.NoTitleBar" />
+            android:theme="@style/AppTheme.TitleBar" />
+
         <activity
             android:name=".view.AppDetailsActivity"
             android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
+            android:name=".view.AppDescriptionActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <activity
             android:name=".view.WiFiPeerList"
             android:label="@string/title_activity_peer_list"
@@ -56,9 +62,11 @@
         <service
             android:name=".utility.FileSendService"
             android:exported="false" />
+
         <service
             android:name=".utility.FIleSendBluetooth"
             android:exported="false" />
+
         <service android:name="org.eclipse.paho.android.service.MqttService" />
 
         <!--
@@ -76,9 +84,9 @@
             android:name=".view.BluetoothPeerList"
             android:label="@string/title_activity_bluethooth_view"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+
         <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
-        <activity android:name=".view.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+
     </application>
 
 </manifest>

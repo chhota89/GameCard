@@ -353,16 +353,16 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             @Override
             public void onClick(View view, int position) {
                 if (gameList.get(position) instanceof ApplicationInfo) {
-                    Intent intent = new Intent(HomeView.this, AppDetailsActivity.class);
+                    Intent intent = new Intent(HomeView.this, AppDescriptionActivity.class);
                     /*if(position==1)
                         intent=new Intent(HomeView.this, MainActivity.class);*/
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         ImageView imageView1 = (ImageView) view.findViewById(R.id.appLogo);
-                        ActivityOptionsCompat options = ActivityOptionsCompat.
-                                makeSceneTransitionAnimation(HomeView.this, imageView1, imageView1.getTransitionName());
+                        /*ActivityOptionsCompat options = ActivityOptionsCompat.
+                                makeSceneTransitionAnimation(HomeView.this, imageView1, imageView1.getTransitionName());*/
                         intent.putExtra("APPLICATION", (ApplicationInfo) gameList.get(position));
-                        startActivity(intent, options.toBundle());
+                        startActivity(intent/*, options.toBundle()*/);
                     } else {
                         intent.putExtra("APPLICATION", (ApplicationInfo) gameList.get(position));
                         startActivity(intent);
