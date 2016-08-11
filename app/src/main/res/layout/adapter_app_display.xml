@@ -4,26 +4,24 @@
     android:id="@+id/card_view"
     android:clickable="true"
     android:focusable="true"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginTop="7dp"
-    android:layout_marginLeft="7dp"
-    android:layout_marginRight="7dp"
     card_view:cardElevation="3sp"
     card_view:cardUseCompatPadding="true">
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_width="130dp"
+        android:layout_height="130dp">
 
         <ImageView
             android:layout_marginTop="8dp"
             android:layout_gravity="center"
             android:id="@+id/appLogo"
             android:transitionName="APPLICATION_ICON"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_width="90dp"
+            android:layout_height="90dp" />
         <TextView
             android:id="@+id/appName"
             android:text="App Name"

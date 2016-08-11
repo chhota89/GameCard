@@ -320,7 +320,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         }
 
         gameList = new ArrayList<>();
-        gameList.add(0, "Discover new games");
+        gameList.add(0, "Continue Playing");
         adapterDisplayApp = new AdapterDisplayApp(gameList, HomeView.this);
 
         // Load data from local database.

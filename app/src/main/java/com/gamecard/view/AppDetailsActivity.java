@@ -9,6 +9,7 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -26,6 +27,7 @@ import com.gamecard.utility.AnimationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class AppDetailsActivity extends AppCompatActivity {
@@ -33,6 +35,8 @@ public class AppDetailsActivity extends AppCompatActivity {
     private static final String TAG = "AppDetailsActivity";
     PackageManager packageManager;
     ApplicationInfo applicationInfo;
+    CoordinatorLayout coordinatorLayout;
+    List<String> sharePackageSet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +53,10 @@ public class AppDetailsActivity extends AppCompatActivity {
         applicationInfo = getIntent().getParcelableExtra("APPLICATION");
 
         getSupportActionBar().setTitle(applicationInfo.loadLabel(packageManager));
+
+        coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout);
+        String[] myResArray = getResources().getStringArray(R.array.share_package);
+        sharePackageSet = Arrays.asList(myResArray);
 
         TextView appName = (TextView) findViewById(R.id.appName);
         TextView companyName = (TextView) findViewById(R.id.companyName);
