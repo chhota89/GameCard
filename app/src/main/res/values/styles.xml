@@ -23,7 +23,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.NoTitleBar">
+    <style name="AppTheme.TitleBar">
         <item name="colorPrimaryDark">@color/colorPrimaryDarkTransperent</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
