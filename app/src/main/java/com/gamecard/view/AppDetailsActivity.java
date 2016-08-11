@@ -1,10 +1,15 @@
 package com.gamecard.view;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.LabeledIntent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.PopupMenu;
@@ -20,6 +25,8 @@ import com.gamecard.R;
 import com.gamecard.utility.AnimationUtility;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AppDetailsActivity extends AppCompatActivity {
 
@@ -98,6 +105,11 @@ public class AppDetailsActivity extends AppCompatActivity {
                     case R.id.wifi:
                         openPeerListActivity();
                         return true;
+
+                    case R.id.share:
+                        openShareOption();
+                        return true;
+
                     default:
                         return true;
                 }
@@ -105,6 +117,50 @@ public class AppDetailsActivity extends AppCompatActivity {
         });
         menu.show();
     }
+
+    private void openShareOption() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("application/vnd.android.package-archive");
+            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(applicationInfo.sourceDir));
+            PackageManager manager = getPackageManager();
+            List<ResolveInfo> infos = manager.queryIntentActivities(sendIntent, 0);
+            List<LabeledIntent> intentList = new ArrayList<LabeledIntent>();
+
+            for (ResolveInfo resolveInfo : infos) {
+                Log.i(TAG, "openShareOption: .....  .... .... ... " + resolveInfo.activityInfo.packageName);
+                if (sharePackageSet.contains(resolveInfo.activityInfo.packageName)) {
+                    Intent intent = new Intent();
+                    intent.setComponent(new ComponentName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name));
+                    intent.setAction(Intent.ACTION_SEND);
+                    intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(applicationInfo.sourceDir));
+                    intentList.add(new LabeledIntent(intent, resolveInfo.activityInfo.packageName, resolveInfo.loadLabel(getPackageManager()), resolveInfo.icon));
+                }
+            }
+           /* Intent intent = new Intent(AppDetailsActivity.this, BluetoothPeerList.class);
+            intent.putExtra("APPLICATION", applicationInfo);
+            intentList.add(new LabeledIntent(intent,"com.gamecard","Bluethooth",0));*/
+
+            // convert intentList to array
+            LabeledIntent[] extraIntents = intentList.toArray(new LabeledIntent[intentList.size()]);
+            Intent openInChooser = Intent.createChooser(new Intent(), getResources().getString(R.string.share_chooser_text));
+
+            openInChooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, extraIntents);
+            try {
+                startActivity(openInChooser);
+            } catch (Exception exception) {
+                Snackbar.make(coordinatorLayout, getResources().getString(R.string.no_send_app_found), Snackbar.LENGTH_LONG)
+                        .show();
+            }
+        }
+        else{
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("application/vnd.android.package-archive");
+            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(applicationInfo.sourceDir));
+            startActivity(Intent.createChooser(sendIntent,getResources().getString(R.string.share_chooser_text)));
+        }
+    }
+
 
     private void openPeerListActivity() {
         Intent intent = new Intent(AppDetailsActivity.this, WiFiPeerList.class);
