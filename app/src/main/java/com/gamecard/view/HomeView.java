@@ -379,7 +379,8 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private void loadDataFromRest() {
 
         final PackageModel packageModel = new PackageModel(packageList);
-        packageModel.setTopic(CLIENT);
+        String android_id = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
+        packageModel.setTopic(android_id);
         ((AppController)getApplication()).getMqttComponent().inject(this);
         final MqttController mqttController = new MqttController(CLIENT,client);
         //establish connection with mqtt server
