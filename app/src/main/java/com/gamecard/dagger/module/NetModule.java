@@ -12,6 +12,7 @@ import dagger.Module;
 import dagger.Provides;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -46,8 +47,11 @@ public class NetModule {
     @Provides
     @Singleton
     OkHttpClient provideOkHttpClient(Cache cache){
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient.Builder client = new OkHttpClient.Builder();
         client.cache(cache);
+        client.addInterceptor(interceptor);
         return client.build();
     }
 
