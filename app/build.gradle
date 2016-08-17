@@ -20,13 +20,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-
-
-
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile files('libs/org.eclipse.paho.android.service-1.0.2.jar')
     compile files('libs/org.eclipse.paho.client.mqttv3-1.0.2.jar')
-
 
     compile 'com.android.support:appcompat-v7:24.1.1'
     compile 'com.facebook.android:facebook-android-sdk:4.+'
@@ -42,7 +38,6 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:24.1.1'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.github.bumptech.glide:glide:3.7.0'
-
     compile 'com.soundcloud.android:android-crop:1.0.1@aar'
     compile 'com.kyleduo.switchbutton:library:1.4.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha6'
@@ -53,4 +48,5 @@ dependencies {
     androidTestCompile 'com.android.support:support-annotations:24.1.1'
     apt 'com.google.dagger:dagger-compiler:2.2'
     provided 'javax.annotation:jsr250-api:1.0'
+    compile files('libs/YouTubeAndroidPlayerApi.jar')
 }

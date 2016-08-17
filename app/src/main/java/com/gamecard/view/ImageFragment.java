@@ -91,6 +91,7 @@ public class ImageFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
+
      //   if(progressDialog!=null && progressDialog.isShowing())
        //     progressDialog.hide();
         progressBar1.setVisibility(View.GONE);
