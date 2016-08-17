@@ -38,20 +38,28 @@ public class AppDescriptionActivity extends AppCompatActivity {
         ViewPageAdapter viewPageAdapter=new ViewPageAdapter(getSupportFragmentManager());
         GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo("packagename",applicationInfo.packageName).findFirst();
         VedioImageLinkModel vedioImageLinkModel=new Gson().fromJson(realmResults.getJsonImageVedioLink(), VedioImageLinkModel.class);
-        viewPageAdapter.addUrl(vedioImageLinkModel.getImageList());
         String vediolink=vedioImageLinkModel.getVedioLink();
+
+        viewPageAdapter.addUrl(vediolink,vedioImageLinkModel.getImageList());
+
         viewPager.setAdapter(viewPageAdapter);
     }
 
     class  ViewPageAdapter extends FragmentPagerAdapter {
         private List<String> urlList = new ArrayList<>();
-
+        String vedioLink;
+        boolean vedioPresent=false;
         public ViewPageAdapter(FragmentManager fm) {
             super(fm);
         }
 
         @Override
         public Fragment getItem(int position) {
+            if(vedioPresent){
+                if(position==0){
+                    return YouTubeFragment.newInstance(vedioLink);
+                }
+            }
             return ImageFragment.newInstance(urlList.get(position));
         }
 
@@ -60,8 +68,13 @@ public class AppDescriptionActivity extends AppCompatActivity {
             return urlList.size();
         }
 
-        public void addUrl(List<String> urlList){
+        public void addUrl(String vedioLink,List<String> urlList){
             this.urlList=urlList;
+            this.vedioLink=vedioLink;
+
+            if(!vedioLink.equals("")){
+                vedioPresent=true;
+            }
         }
 
         @Override

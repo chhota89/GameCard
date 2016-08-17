@@ -74,14 +74,14 @@ public class ImageFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        progressDialog.setProgress(ProgressDialog.STYLE_SPINNER);
-        progressDialog.show();
+       /* progressDialog.setProgress(ProgressDialog.STYLE_SPINNER);
+        progressDialog.show();*/
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if(progressDialog!=null && progressDialog.isShowing())
-            progressDialog.hide();
+       /* if(progressDialog!=null && progressDialog.isShowing())
+            progressDialog.hide();*/
     }
 }
