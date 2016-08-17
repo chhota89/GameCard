@@ -28,7 +28,7 @@ import com.gamecard.R;
 import com.gamecard.adapter.AdapterBluethooth;
 import com.gamecard.callback.CallBackBluetooth;
 import com.gamecard.callback.ClickListener;
-import com.gamecard.utility.BluetoothBroadcastReciver;
+import com.gamecard.utility.BluetoothBroadcastReceiver;
 import com.gamecard.utility.FIleSendBluetooth;
 
 import java.io.File;
@@ -45,7 +45,7 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     private static final int ASK_READ_WRITE_PERMISSION = 219;
     Intent fileSendBluetooth;
     IntentFilter bluetoothIntent =new IntentFilter();
-    BluetoothBroadcastReciver bluetoothBroadcastReciver;
+    BluetoothBroadcastReceiver bluetoothBroadcastReciver;
     BluetoothAdapter mBluetoothAdapter;
     Set<BluetoothDevice> pairedDevices;
     List<BluetoothDevice> deviceList;
@@ -236,7 +236,7 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     @Override
     protected void onResume() {
         super.onResume();
-        bluetoothBroadcastReciver =new BluetoothBroadcastReciver(this);
+        bluetoothBroadcastReciver =new BluetoothBroadcastReceiver(this);
         registerReceiver(bluetoothBroadcastReciver, bluetoothIntent);
     }
 

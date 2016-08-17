@@ -12,6 +12,24 @@ import java.util.List;
 public class PackageModel {
 
     private String topic;
+    private int version;
+    private String manufacturer;
+
+    public String getManufacturer() {
+        return manufacturer;
+    }
+
+    public void setManufacturer(String manufacturer) {
+        this.manufacturer = manufacturer;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
 
     public PackageModel(){}
 

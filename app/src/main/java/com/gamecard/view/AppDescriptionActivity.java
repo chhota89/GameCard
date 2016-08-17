@@ -17,25 +17,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmResults;
 
 public class AppDescriptionActivity extends AppCompatActivity {
 
     Realm realm;
     ApplicationInfo applicationInfo;
+    ViewPageAdapter viewPageAdapter;
+    ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_description);
         realm=Realm.getInstance(AppDescriptionActivity.this);
-        ViewPager viewPager=(ViewPager)findViewById(R.id.viewpager);
+        viewPager=(ViewPager)findViewById(R.id.viewpager);
         applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         setUpViewPager(viewPager);
     }
 
     private void setUpViewPager(ViewPager viewPager) {
-        ViewPageAdapter viewPageAdapter=new ViewPageAdapter(getSupportFragmentManager());
+        viewPageAdapter=new ViewPageAdapter(getSupportFragmentManager());
         GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo("packagename",applicationInfo.packageName).findFirst();
         VedioImageLinkModel vedioImageLinkModel=new Gson().fromJson(realmResults.getJsonImageVedioLink(), VedioImageLinkModel.class);
         viewPageAdapter.addUrl(vedioImageLinkModel.getImageList());
@@ -57,6 +58,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
+            viewPager.setOffscreenPageLimit(urlList.size());
             return urlList.size();
         }
 
