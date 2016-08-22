@@ -28,7 +28,6 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
@@ -60,9 +59,8 @@ import com.gamecard.controller.RestCall;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.model.PackageModel;
 import com.gamecard.utility.AppController;
-import com.gamecard.utility.ApplicationUtility;
 import com.gamecard.utility.BluethoothFileReciver;
-import com.gamecard.utility.BluetoothBroadcastReciver;
+import com.gamecard.utility.BluetoothBroadcastReceiver;
 import com.gamecard.utility.CircleTransformation;
 import com.gamecard.utility.EditSharedPrefrence;
 import com.gamecard.utility.FacebookUtility;
@@ -88,7 +86,6 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import io.realm.Realm;
-import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast, WifiP2pManager.PeerListListener, CallBackBluetooth {
@@ -100,7 +97,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private static final String mqttServerPath = "tcp://52.66.116.176:1883";
     private static final int GALLERY_CODE = 214;
     private static final int REQUEST_ENABLE_BT = 215;
-    private static final int BLUETOOTH_DISCOVRABLE = 216;
+    private static final int BLUETOOTH_DISCOVERABLE = 216;
     private static final int ASK_READ_WRITE_PERMISSION = 219;
     private static final int WIFI_READ_WRITE_PERMISSION = 220;
     private static final int PIC_CROP = 221;
@@ -114,7 +111,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private final IntentFilter intentFilter = new IntentFilter();
     IntentFilter bluetoothIntent = new IntentFilter();
     SwitchButton wifiSwitch, bluetoothSwitch;
-    TextView reciveFile;
+    TextView receiveFile;
     CoordinatorLayout coordinatorLayout;
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
@@ -127,7 +124,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     Uri outPutUri = null;
     BluetoothAdapter mBluetoothAdapter;
     CollapsingToolbarLayout collapsingToolbarLayout;
-    private BluetoothBroadcastReciver bluetoothBroadcastReciver;
+    private BluetoothBroadcastReceiver bluetoothBroadcastReceiver;
     private Realm realm;
     List<Object> gameList;
     AdapterDisplayApp adapterDisplayApp;
@@ -204,7 +201,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
 
         toolbarTextAppernce();
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
-        reciveFile = (TextView) findViewById(R.id.reciveFile);
+        receiveFile = (TextView) findViewById(R.id.reciveFile);
         bluetoothSwitch = (SwitchButton) findViewById(R.id.bluetooth);
         bluetoothSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -212,7 +209,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                 if (isChecked) {
                     if (mBluetoothAdapter == null) {
                         // Device does not support Bluetooth
-                        Snackbar.make(coordinatorLayout, "This device is not support Bluethooth", Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(coordinatorLayout, "This device is not support Bluetooth", Snackbar.LENGTH_LONG).show();
                     } else {
                         //Device has bluetooth
                         if (!mBluetoothAdapter.isEnabled()) {
@@ -244,7 +241,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     if (wifiOn) {
-                        reciveFile.setText("Receiver started");
+                        receiveFile.setText("Receiver started");
                         Snackbar.make(coordinatorLayout, "Receiver started.", Snackbar.LENGTH_LONG)
                                 .setAction("UNDO", new View.OnClickListener() {
                                     @Override
@@ -259,7 +256,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                         wifiSwitchIsOff();
                     }
                 } else {
-                    reciveFile.setText(getString(R.string.reciveFile));
+                    receiveFile.setText(getString(R.string.reciveFile));
                     manager.removeGroup(channel, null);
                 }
             }
@@ -379,9 +376,14 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private void loadDataFromRest() {
 
         final PackageModel packageModel = new PackageModel(packageList);
-        packageModel.setTopic(CLIENT);
+        String android_id = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
+        packageModel.setTopic(android_id);
+        int  osVersion1 =  Build.VERSION.SDK_INT;
+        String manufacturer1 = Build.MANUFACTURER;
+        packageModel.setVersion(osVersion1);
+        packageModel.setManufacturer(manufacturer1);
         ((AppController)getApplication()).getMqttComponent().inject(this);
-        final MqttController mqttController = new MqttController(CLIENT,client);
+        final MqttController mqttController = new MqttController(android_id,client);
         //establish connection with mqtt server
         mqttController.connectToMqtt(new MqttController.CallBackConnectMqtt() {
             @Override
@@ -453,14 +455,14 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private void turnOnBluetoothIntent() {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        /*bluetoothBroadcastReciver =new BluetoothBroadcastReciver(this);
-        registerReceiver(bluetoothBroadcastReciver, bluetoothIntent);*/
+        /*bluetoothBroadcastReceiver =new BluetoothBroadcastReceiver(this);
+        registerReceiver(bluetoothBroadcastReceiver, bluetoothIntent);*/
     }
 
     private void requestToMakeBluetoothDiscovrable() {
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 400);
-        startActivityForResult(intent, BLUETOOTH_DISCOVRABLE);
+        startActivityForResult(intent, BLUETOOTH_DISCOVERABLE);
     }
 
     private void wifiSwitchIsOff() {
@@ -480,8 +482,8 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         receiver = new WiFiDirectBroadcastReceiver(manager, channel, this, this);
         registerReceiver(receiver, intentFilter);
 
-        bluetoothBroadcastReciver = new BluetoothBroadcastReciver(this);
-        registerReceiver(bluetoothBroadcastReciver, bluetoothIntent);
+        bluetoothBroadcastReceiver = new BluetoothBroadcastReceiver(this);
+        registerReceiver(bluetoothBroadcastReceiver, bluetoothIntent);
 
     }
 
@@ -489,7 +491,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     public void onPause() {
         super.onPause();
         unregisterReceiver(receiver);
-        unregisterReceiver(bluetoothBroadcastReciver);
+        unregisterReceiver(bluetoothBroadcastReceiver);
     }
 
     @Override
@@ -668,7 +670,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                     requestToMakeBluetoothDiscovrable();
             }
         }
-        if (requestCode == BLUETOOTH_DISCOVRABLE && resultCode == 400) {
+        if (requestCode == BLUETOOTH_DISCOVERABLE && resultCode == 400) {
             //Start the Receiver thread.
             if (Build.VERSION.SDK_INT >= 23)
                 takeRunTimePermissionForStorage(ASK_READ_WRITE_PERMISSION);
@@ -678,7 +680,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             bluetoothSwitch.setChecked(true);
         }
         if (resultCode == RESULT_CANCELED) {
-            if (requestCode == REQUEST_ENABLE_BT || requestCode == BLUETOOTH_DISCOVRABLE)
+            if (requestCode == REQUEST_ENABLE_BT || requestCode == BLUETOOTH_DISCOVERABLE)
                 bluetoothSwitch.setChecked(false);
         }
     }
