@@ -12,11 +12,11 @@ import com.gamecard.callback.CallBackBluetooth;
  * Created by bridgeit on 2/7/16.
  */
 
-public class BluetoothBroadcastReciver extends BroadcastReceiver {
+public class BluetoothBroadcastReceiver extends BroadcastReceiver {
 
     private CallBackBluetooth callBackBluetooth;
 
-    public BluetoothBroadcastReciver(CallBackBluetooth callBackBluetooth){
+    public BluetoothBroadcastReceiver(CallBackBluetooth callBackBluetooth){
         super();
         this.callBackBluetooth=callBackBluetooth;
     }

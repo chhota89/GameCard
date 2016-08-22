@@ -28,7 +28,7 @@ import com.gamecard.R;
 import com.gamecard.adapter.AdapterBluethooth;
 import com.gamecard.callback.CallBackBluetooth;
 import com.gamecard.callback.ClickListener;
-import com.gamecard.utility.BluetoothBroadcastReciver;
+import com.gamecard.utility.BluetoothBroadcastReceiver;
 import com.gamecard.utility.FIleSendBluetooth;
 
 import java.io.File;
@@ -45,17 +45,18 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     private static final int ASK_READ_WRITE_PERMISSION = 219;
     Intent fileSendBluetooth;
     IntentFilter bluetoothIntent =new IntentFilter();
-    BluetoothBroadcastReciver bluetoothBroadcastReciver;
+    BluetoothBroadcastReceiver bluetoothBroadcastReciver;
     BluetoothAdapter mBluetoothAdapter;
     Set<BluetoothDevice> pairedDevices;
     List<BluetoothDevice> deviceList;
     private RecyclerView recyclerView;
     private AdapterBluethooth adapterBluetooth;
-    ApplicationInfo applicationInfo;
+  //  ApplicationInfo applicationInfo;
     List<Object> appList;
     ProgressDialog mProgressDialog;
     CoordinatorLayout coordinatorLayout;
     ProgressDialog progressDialog;
+    String sourceDir, loadLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,9 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
 
         coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout);
 
-        applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+     //   applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+        sourceDir = getIntent().getStringExtra(YouTubeFragment.SOURCE_DIR);
+        loadLabel = getIntent().getStringExtra(YouTubeFragment.LABEL_NAME);
 
         deviceList=new ArrayList<>();
         recyclerView = (RecyclerView) findViewById(R.id.peerList);
@@ -83,7 +86,7 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
                 fileSendBluetooth=new Intent(BluetoothPeerList.this, FIleSendBluetooth.class);
                 fileSendBluetooth.putExtra("Device",device);
                 fileSendBluetooth.putExtra("UUID",getString(R.string.uuid));
-                fileSendBluetooth.putExtra("fileToSend",new File(applicationInfo.sourceDir));
+                fileSendBluetooth.putExtra("fileToSend",new File(sourceDir));
                 fileSendBluetooth.putExtra("resultReciver", new ResultReceiver(new Handler()) {
                     @Override
                     protected void onReceiveResult(int resultCode, final Bundle resultData) {
@@ -101,7 +104,7 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
                             else{
                                 //Initialize the progress dialog
                                 mProgressDialog = new ProgressDialog(BluetoothPeerList.this);
-                                mProgressDialog.setMessage("Sending ..... "+applicationInfo.loadLabel(getPackageManager()));
+                                mProgressDialog.setMessage("Sending ..... "+loadLabel);
                                 mProgressDialog.setIndeterminate(false);
                                 mProgressDialog.setMax(100);
                                 mProgressDialog.setProgressNumberFormat(null);
@@ -236,7 +239,7 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     @Override
     protected void onResume() {
         super.onResume();
-        bluetoothBroadcastReciver =new BluetoothBroadcastReciver(this);
+        bluetoothBroadcastReciver =new BluetoothBroadcastReceiver(this);
         registerReceiver(bluetoothBroadcastReciver, bluetoothIntent);
     }
 

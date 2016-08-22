@@ -1,7 +1,6 @@
 package com.gamecard.view;
 
 
-import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
@@ -25,6 +25,8 @@ public class ImageFragment extends Fragment {
 
     private final static String IMAGE_URL="IMAGE_URL";
     private String imageUrl;
+    //  static ProgressDialog progressDialog;
+    private ProgressBar progressBar1;
 
     public ImageFragment() {
         // Required empty public constructor
@@ -52,16 +54,26 @@ public class ImageFragment extends Fragment {
         // Inflate the layout for this fragment
         View view= inflater.inflate(R.layout.fragment_image_layout, container, false);
         ImageView appImage=(ImageView)view.findViewById(R.id.appImage);
+        //    progressDialog=new ProgressDialog(view.getContext());
+        progressBar1 = (ProgressBar) view.findViewById(R.id.progressBar);
+        progressBar1.setVisibility(View.GONE);
+
+        //progressDialog.setProgressDrawable(getResources().getDrawable(R.drawable.progress_animation));
+      /*  String TAG="ImageUrl";
+        Log.i(TAG, "ImageUrl:................ "+imageUrl);
+*/
         Glide.with(view.getContext()).load(imageUrl).listener(new RequestListener<String, GlideDrawable>() {
             @Override
             public boolean onException(Exception e, String model, Target<GlideDrawable> target, boolean isFirstResource) {
-                AppDescriptionActivity.progressDialog.hide();
+                //     progressDialog.hide();
+                progressBar1.setVisibility(View.GONE);
                 return false;
             }
 
             @Override
             public boolean onResourceReady(GlideDrawable resource, String model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-                AppDescriptionActivity.progressDialog.hide();
+                //    progressDialog.hide();
+                progressBar1.setVisibility(View.GONE);
                 return false;
             }
         }).into(appImage);
@@ -71,13 +83,17 @@ public class ImageFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        AppDescriptionActivity.progressDialog.setProgress(ProgressDialog.STYLE_SPINNER);
+        //   progressDialog.setProgress(ProgressDialog.STYLE_SPINNER);
+        //   progressDialog.show();
+        progressBar1.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if(AppDescriptionActivity.progressDialog!=null && AppDescriptionActivity.progressDialog.isShowing())
-            AppDescriptionActivity.progressDialog.hide();
+
+        //   if(progressDialog!=null && progressDialog.isShowing())
+        //     progressDialog.hide();
+        progressBar1.setVisibility(View.GONE);
     }
 }

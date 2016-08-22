@@ -60,9 +60,10 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
     private WifiP2pManager manager;
-    private ApplicationInfo applicationInfo;
+  //  private ApplicationInfo applicationInfo;
     ProgressDialog progressDialog;
     CoordinatorLayout coordinatorLayout;
+    String sourceDir, loadLabel;
 
 
     @Override
@@ -72,7 +73,10 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
 
         coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout) ;
 
-        applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+      //  applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+        sourceDir = getIntent().getStringExtra(YouTubeFragment.SOURCE_DIR);
+        loadLabel = getIntent().getStringExtra(YouTubeFragment.LABEL_NAME);
+
         progressDialog = new ProgressDialog(WiFiPeerList.this);
         progressDialog.setMessage("Searching ...");
         progressDialog.setCancelable(true);
@@ -233,7 +237,7 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
 
     public void sendFile(View view) {
 
-        final File appsDir = new File(applicationInfo.sourceDir);
+        final File appsDir = new File(sourceDir);
 
         if (wifiP2pInfo != null && wifiP2pInfo.groupFormed) {
             Intent fileSendService = new Intent(this, FileSendService.class);
@@ -258,7 +262,7 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
                         else{
                             //Initialize the progress dialog
                             mProgressDialog = new ProgressDialog(WiFiPeerList.this);
-                            mProgressDialog.setMessage("Sending ..... "+applicationInfo.loadLabel(getPackageManager()));
+                            mProgressDialog.setMessage("Sending ..... "+loadLabel);
                             mProgressDialog.setIndeterminate(false);
                             mProgressDialog.setMax(100);
                             mProgressDialog.setProgressNumberFormat(null);
