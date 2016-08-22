@@ -13,4 +13,5 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
+    <include layout="@layout/material_design_floating_action_menu"/>
 </android.support.design.widget.CoordinatorLayout>

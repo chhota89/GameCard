@@ -6,7 +6,7 @@
     android:background="@color/black"
     tools:context="com.gamecard.view.ImageFragment">
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:id="@+id/appImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

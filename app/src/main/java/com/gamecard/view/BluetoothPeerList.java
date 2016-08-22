@@ -51,11 +51,12 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     List<BluetoothDevice> deviceList;
     private RecyclerView recyclerView;
     private AdapterBluethooth adapterBluetooth;
-    ApplicationInfo applicationInfo;
+  //  ApplicationInfo applicationInfo;
     List<Object> appList;
     ProgressDialog mProgressDialog;
     CoordinatorLayout coordinatorLayout;
     ProgressDialog progressDialog;
+    String sourceDir, loadLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,9 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
 
         coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout);
 
-        applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+     //   applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+        sourceDir = getIntent().getStringExtra(YouTubeFragment.SOURCE_DIR);
+        loadLabel = getIntent().getStringExtra(YouTubeFragment.LABEL_NAME);
 
         deviceList=new ArrayList<>();
         recyclerView = (RecyclerView) findViewById(R.id.peerList);
@@ -83,7 +86,7 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
                 fileSendBluetooth=new Intent(BluetoothPeerList.this, FIleSendBluetooth.class);
                 fileSendBluetooth.putExtra("Device",device);
                 fileSendBluetooth.putExtra("UUID",getString(R.string.uuid));
-                fileSendBluetooth.putExtra("fileToSend",new File(applicationInfo.sourceDir));
+                fileSendBluetooth.putExtra("fileToSend",new File(sourceDir));
                 fileSendBluetooth.putExtra("resultReciver", new ResultReceiver(new Handler()) {
                     @Override
                     protected void onReceiveResult(int resultCode, final Bundle resultData) {
@@ -101,7 +104,7 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
                             else{
                                 //Initialize the progress dialog
                                 mProgressDialog = new ProgressDialog(BluetoothPeerList.this);
-                                mProgressDialog.setMessage("Sending ..... "+applicationInfo.loadLabel(getPackageManager()));
+                                mProgressDialog.setMessage("Sending ..... "+loadLabel);
                                 mProgressDialog.setIndeterminate(false);
                                 mProgressDialog.setMax(100);
                                 mProgressDialog.setProgressNumberFormat(null);
