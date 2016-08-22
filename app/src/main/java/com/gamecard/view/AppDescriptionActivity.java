@@ -1,5 +1,6 @@
 package com.gamecard.view;
 
+import android.app.ProgressDialog;
 import android.content.pm.ApplicationInfo;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -23,11 +24,14 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
     Realm realm;
     ApplicationInfo applicationInfo;
+    static ProgressDialog progressDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_app_description);
+        progressDialog=new ProgressDialog(AppDescriptionActivity.this);
         realm=Realm.getInstance(AppDescriptionActivity.this);
         ViewPager viewPager=(ViewPager)findViewById(R.id.viewpager);
         applicationInfo = getIntent().getParcelableExtra("APPLICATION");
@@ -52,7 +56,9 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
+            progressDialog.show();
             return ImageFragment.newInstance(urlList.get(position));
+
         }
 
         @Override

@@ -25,7 +25,6 @@ public class ImageFragment extends Fragment {
 
     private final static String IMAGE_URL="IMAGE_URL";
     private String imageUrl;
-    static ProgressDialog progressDialog;
 
     public ImageFragment() {
         // Required empty public constructor
@@ -53,18 +52,16 @@ public class ImageFragment extends Fragment {
         // Inflate the layout for this fragment
         View view= inflater.inflate(R.layout.fragment_image_layout, container, false);
         ImageView appImage=(ImageView)view.findViewById(R.id.appImage);
-        progressDialog=new ProgressDialog(view.getContext());
-        //progressDialog.setProgressDrawable(getResources().getDrawable(R.drawable.progress_animation));
         Glide.with(view.getContext()).load(imageUrl).listener(new RequestListener<String, GlideDrawable>() {
             @Override
             public boolean onException(Exception e, String model, Target<GlideDrawable> target, boolean isFirstResource) {
-                progressDialog.hide();
+                AppDescriptionActivity.progressDialog.hide();
                 return false;
             }
 
             @Override
             public boolean onResourceReady(GlideDrawable resource, String model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-                progressDialog.hide();
+                AppDescriptionActivity.progressDialog.hide();
                 return false;
             }
         }).into(appImage);
@@ -74,14 +71,13 @@ public class ImageFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        progressDialog.setProgress(ProgressDialog.STYLE_SPINNER);
-        progressDialog.show();
+        AppDescriptionActivity.progressDialog.setProgress(ProgressDialog.STYLE_SPINNER);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if(progressDialog!=null && progressDialog.isShowing())
-            progressDialog.hide();
+        if(AppDescriptionActivity.progressDialog!=null && AppDescriptionActivity.progressDialog.isShowing())
+            AppDescriptionActivity.progressDialog.hide();
     }
 }
