@@ -1,5 +1,6 @@
 package com.gamecard.view;
 
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -43,6 +44,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
     ApplicationInfo applicationInfo;
     ViewPageAdapter viewPageAdapter;
     ViewPager viewPager;
+    String packageName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +52,10 @@ public class AppDescriptionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_app_description);
         realm=Realm.getInstance(AppDescriptionActivity.this);
         viewPager=(ViewPager)findViewById(R.id.viewpager);
-        applicationInfo = getIntent().getParcelableExtra("APPLICATION");
+        //applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(YouTubeFragment.SOURCE_DIR);
         loadLabel = getIntent().getStringExtra(YouTubeFragment.LABEL_NAME);
+        packageName=getIntent().getStringExtra("APPLICATION");
         setUpViewPager(viewPager);
 
         View rootView = View.inflate(this,R.layout.activity_app_details,null);
@@ -91,7 +94,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
     private void setUpViewPager(ViewPager viewPager) {
         viewPageAdapter=new ViewPageAdapter(getSupportFragmentManager());
-        GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo("packagename",applicationInfo.packageName).findFirst();
+        GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo("packagename",packageName).findFirst();
         VedioImageLinkModel vedioImageLinkModel=new Gson().fromJson(realmResults.getJsonImageVedioLink(), VedioImageLinkModel.class);
         String vediolink=vedioImageLinkModel.getVedioLink();
 
@@ -116,6 +119,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
                 }
             }
             return ImageFragment.newInstance(urlList.get(position));
+
         }
 
         @Override
@@ -128,7 +132,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
             this.urlList=urlList;
             this.vedioLink=vedioLink;
 
-            if(!vedioLink.equals("")){
+            if(vedioLink!=null){
                 vedioPresent=true;
             }
         }
