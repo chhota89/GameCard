@@ -416,11 +416,11 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onConnectionSuccess() {
 
                 //Subscribe to mqtt topic for installGame
-                mqttController.subcibeTopic(android_id,new CallBackMqtt() {
+                mqttController.subcibeTopic(realm,android_id,new CallBackMqtt() {
                     @Override
                     public void onMessageRecive(GameResponseModel gameResponseModel) {
 
-                        saveDataToRealm(gameResponseModel);
+                        //saveDataToRealm(gameResponseModel);
                         //response receive from mqtt server
                         if (gameResponseModel.getIsgame() && !gameResponseModel.getSuggestion() && applicationInfoMap.containsKey(gameResponseModel.getPackagename())) {
                             gameList.add(1,applicationInfoMap.get(gameResponseModel.getPackagename()));

@@ -5,7 +5,6 @@ import android.util.Log;
 import com.gamecard.callback.CallBackMqtt;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.utility.JsonConvertor;
-import com.gamecard.view.HomeView;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -14,6 +13,8 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import io.realm.Realm;
 
 /**
  * Created by bridgeit on 1/8/16.
@@ -24,11 +25,11 @@ public class MqttController {
     private final String TAG = "MqttController";
     IMqttToken subToken = null;
 
-    public MqttController( MqttAndroidClient client) {
+    public MqttController(MqttAndroidClient client) {
         this.client = client;
     }
 
-    public void subcibeTopic(String clientId,final CallBackMqtt callback) {
+    public void subcibeTopic(final Realm realm, String clientId, final CallBackMqtt callback) {
 
         //subcribe to the topic
         int qos = 1;
@@ -55,6 +56,14 @@ public class MqttController {
                         //callback.onMessageRecive(gson.fromJson(message, GameResponseModel.class));
                         GameResponseModel model = null;
 
+                        try {
+                            realm.beginTransaction();
+                            model = realm.createObjectFromJson(GameResponseModel.class, message);
+                        } catch (Exception exception) {
+                            Log.e(TAG, "messageArrived: ", exception);
+                        } finally {
+                            realm.commitTransaction();
+                        }
                         //model = realm.createObjectFromJson(GameResponseModel.class, message);
                         model = JsonConvertor.getGameResponseFromJson(message);
                         callback.onMessageRecive(model);
