@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.gamecard.callback.CallBackMqtt;
 import com.gamecard.model.GameResponseModel;
+import com.gamecard.utility.JsonConvertor;
+import com.gamecard.view.HomeView;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -13,28 +15,24 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import io.realm.Realm;
-
 /**
  * Created by bridgeit on 1/8/16.
  */
 
 public class MqttController {
     MqttAndroidClient client;
-    String clientId;
     private final String TAG = "MqttController";
+    IMqttToken subToken = null;
 
-
-    public MqttController(final String clientId,MqttAndroidClient client) {
-        this.clientId = clientId;
-        this.client=client;
+    public MqttController( MqttAndroidClient client) {
+        this.client = client;
     }
 
-    public void subcibeTopic(final Realm realm,final CallBackMqtt callback) {
+    public void subcibeTopic(String clientId,final CallBackMqtt callback) {
 
         //subcribe to the topic
         int qos = 1;
-        IMqttToken subToken = null;
+
         try {
             subToken = client.subscribe(clientId, qos);
         } catch (MqttException e) {
@@ -53,17 +51,12 @@ public class MqttController {
                     @Override
                     public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
                         String message = new String(mqttMessage.getPayload());
-                        Log.i(TAG, "messageArrived: ....."+message);
+                        Log.i(TAG, "messageArrived: ....." + message);
                         //callback.onMessageRecive(gson.fromJson(message, GameResponseModel.class));
-                        GameResponseModel model=null;
-                        try {
-                            realm.beginTransaction();
-                            model = realm.createObjectFromJson(GameResponseModel.class, message);
-                        }catch (Exception exception){
-                            Log.e(TAG, "messageArrived: ",exception );
-                        }finally {
-                            realm.commitTransaction();
-                        }
+                        GameResponseModel model = null;
+
+                        //model = realm.createObjectFromJson(GameResponseModel.class, message);
+                        model = JsonConvertor.getGameResponseFromJson(message);
                         callback.onMessageRecive(model);
 
                     }
@@ -84,8 +77,9 @@ public class MqttController {
 
     }
 
-    public interface CallBackConnectMqtt{
+    public interface CallBackConnectMqtt {
         void onConnectionSuccess();
+
         void onFailure(Throwable throwable);
     }
 

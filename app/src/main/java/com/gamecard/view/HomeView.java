@@ -86,6 +86,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast, WifiP2pManager.PeerListListener, CallBackBluetooth {
@@ -94,7 +95,6 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     MqttAndroidClient client;
 
     private static final String TAG = "HomeView";
-    private static final String mqttServerPath = "tcp://52.66.116.176:1883";
     private static final int GALLERY_CODE = 214;
     private static final int REQUEST_ENABLE_BT = 215;
     private static final int BLUETOOTH_DISCOVERABLE = 216;
@@ -106,8 +106,9 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     public static final String NEW_PACKAGE_LIST="NEW_PACKAGE_LIST";
     public static final String GAME_LIST="GAME_LIST";
     public static final String APPLICATION_INFO_MAP="APPLICATION_INFO_MAP";
-    private static final String CLIENT = MqttClient.generateClientId();
+    public static final String SUGGESTION_LIST="SUGGESTION_LIST";
     private final String FACEBOOK_URL = "https://graph.facebook.com/";
+    public static final String SUGGESTION="SUGGESTION";
     private final IntentFilter intentFilter = new IntentFilter();
     IntentFilter bluetoothIntent = new IntentFilter();
     SwitchButton wifiSwitch, bluetoothSwitch;
@@ -130,7 +131,9 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     AdapterDisplayApp adapterDisplayApp;
     Map<String, ApplicationInfo> applicationInfoMap;
     List<String> packageList;
-    RealmResults<GameResponseModel> realmResults;
+    RealmResults<GameResponseModel> suggestion;
+    RealmChangeListener realmChangeListener;
+    boolean suggestionFlag=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -327,6 +330,27 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                 super.onPostExecute(responseMap);
                 List<ApplicationInfo> gameLisDisplay= (List<ApplicationInfo>) responseMap.get(HomeView.GAME_LIST);
                 gameList.addAll(gameLisDisplay);
+
+                suggestion=realm.where(GameResponseModel.class).equalTo("suggestion",true).findAll();
+                if(suggestion.size()!=0) {
+                    gameList.add("Suggestion");
+                    gameList.addAll(suggestion);
+                }
+                /*realmChangeListener=new RealmChangeListener() {
+                    boolean suggestionFlag=false;
+                    @Override
+                    public void onChange() {
+                        if(suggestion!=null && suggestion.size()!=0){
+                            if(!suggestionFlag)
+                                gameList.add("Suggestion");
+                            suggestionFlag=true;
+                            gameList.addAll(suggestion);
+                            adapterDisplayApp.notifyDataSetChanged();
+                        }
+                    }
+                };
+                suggestion.addChangeListener(realmChangeListener);*/
+
                 adapterDisplayApp.notifyDataSetChanged();
                 applicationInfoMap= (Map<String, ApplicationInfo>) responseMap.get(HomeView.APPLICATION_INFO_MAP);
                 //check for new application is install or not
@@ -349,21 +373,23 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         recyclerView.addOnItemTouchListener(new RecyclerTouchListner(getApplicationContext(), recyclerView, new ClickListener() {
             @Override
             public void onClick(View view, int position) {
+                Intent intent = new Intent(HomeView.this, AppDescriptionActivity.class);
                 if (gameList.get(position) instanceof ApplicationInfo) {
-                    Intent intent = new Intent(HomeView.this, AppDescriptionActivity.class);
-                    /*if(position==1)
-                        intent=new Intent(HomeView.this, MainActivity.class);*/
-
+                    intent.putExtra("APPLICATION",  ((ApplicationInfo) gameList.get(position)).packageName);
+                    intent.putExtra(YouTubeFragment.LABEL_NAME,((ApplicationInfo) gameList.get(position)).loadLabel(getPackageManager()));
+                    intent.putExtra(YouTubeFragment.SOURCE_DIR,((ApplicationInfo) gameList.get(position)).sourceDir);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         ImageView imageView1 = (ImageView) view.findViewById(R.id.appLogo);
                         /*ActivityOptionsCompat options = ActivityOptionsCompat.
                                 makeSceneTransitionAnimation(HomeView.this, imageView1, imageView1.getTransitionName());*/
-                        intent.putExtra("APPLICATION", (ApplicationInfo) gameList.get(position));
                         startActivity(intent/*, options.toBundle()*/);
                     } else {
-                        intent.putExtra("APPLICATION", (ApplicationInfo) gameList.get(position));
                         startActivity(intent);
                     }
+                }
+                if(gameList.get(position) instanceof GameResponseModel){
+                    intent.putExtra("APPLICATION",((GameResponseModel) gameList.get(position)).getPackagename());
+                    startActivity(intent);
                 }
             }
 
@@ -376,26 +402,36 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private void loadDataFromRest() {
 
         final PackageModel packageModel = new PackageModel(packageList);
-        String android_id = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
+        final String android_id = Settings.Secure.getString(this.getContentResolver(), Settings.Secure.ANDROID_ID);
         packageModel.setTopic(android_id);
         int  osVersion1 =  Build.VERSION.SDK_INT;
         String manufacturer1 = Build.MANUFACTURER;
         packageModel.setVersion(osVersion1);
         packageModel.setManufacturer(manufacturer1);
         ((AppController)getApplication()).getMqttComponent().inject(this);
-        final MqttController mqttController = new MqttController(android_id,client);
+        final MqttController mqttController = new MqttController(client);
         //establish connection with mqtt server
         mqttController.connectToMqtt(new MqttController.CallBackConnectMqtt() {
             @Override
             public void onConnectionSuccess() {
 
-                //Subscribe to mqtt topic
-                mqttController.subcibeTopic(realm, new CallBackMqtt() {
+                //Subscribe to mqtt topic for installGame
+                mqttController.subcibeTopic(android_id,new CallBackMqtt() {
                     @Override
                     public void onMessageRecive(GameResponseModel gameResponseModel) {
+
+                        saveDataToRealm(gameResponseModel);
                         //response receive from mqtt server
-                        if (gameResponseModel.getIsgame() && applicationInfoMap.containsKey(gameResponseModel.getPackagename())) {
-                            gameList.add(applicationInfoMap.get(gameResponseModel.getPackagename()));
+                        if (gameResponseModel.getIsgame() && !gameResponseModel.getSuggestion() && applicationInfoMap.containsKey(gameResponseModel.getPackagename())) {
+                            gameList.add(1,applicationInfoMap.get(gameResponseModel.getPackagename()));
+                            adapterDisplayApp.notifyItemInserted(1);
+                        }
+
+                        else if(gameResponseModel.getSuggestion() && gameResponseModel.getIsgame()){
+                            if(!suggestionFlag)
+                                gameList.add("Suggestion");
+                            suggestionFlag=true;
+                            gameList.add(gameResponseModel);
                             adapterDisplayApp.notifyItemInserted(gameList.size()-1);
                         }
                     }
@@ -406,6 +442,25 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                     }
                 });
 
+                /*//Subscribe to mqtt topic for SUGGESTION
+                new MqttController(client).subcibeTopic(android_id+SUGGESTION,new CallBackMqtt() {
+                    @Override
+                    public void onMessageRecive(GameResponseModel gameResponseModel) {
+
+                        saveDataToRealm(gameResponseModel,true);
+                        //response receive from mqtt server
+                        if (gameResponseModel.getIsgame()) {
+                            gameList.add(gameResponseModel);
+                            adapterDisplayApp.notifyItemInserted(gameList.size()-1);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        Toast.makeText(HomeView.this, "Exception " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });*/
+
                 //make rest call to find the game from package List
                 new RestCall(HomeView.this).sendPackageList(packageModel);
             }
@@ -414,6 +469,13 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onFailure(Throwable throwable) {
             }
         });
+    }
+
+    //store data to realm
+    private void saveDataToRealm(GameResponseModel gameResponseModel){
+        realm.beginTransaction();
+        realm.copyToRealm(gameResponseModel);
+        realm.commitTransaction();
     }
 
     private void toolbarTextAppernce() {
@@ -499,7 +561,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         super.onDestroy();
         if(client!=null)
             client.unregisterResources();
-
+        suggestion.removeChangeListeners();
         realm.close();
     }
 

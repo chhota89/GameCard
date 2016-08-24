@@ -30,7 +30,17 @@ public class GameResponseModel extends RealmObject{
 
     private String jsonImageVedioLink;
 
+    private String iconLink;
 
+    private boolean suggestion;
+
+    public boolean getSuggestion() {
+        return suggestion;
+    }
+
+    public void setSuggestion(boolean suggestion) {
+        this.suggestion = suggestion;
+    }
 
     /**
      *
@@ -200,6 +210,14 @@ public class GameResponseModel extends RealmObject{
 
     public void setJsonImageVedioLink(String jsonImageVedioLink) {
         this.jsonImageVedioLink = jsonImageVedioLink;
+    }
+
+    public String getIconLink() {
+        return iconLink;
+    }
+
+    public void setIconLink(String iconLink) {
+        this.iconLink = iconLink;
     }
 
     public GameResponseModel(){

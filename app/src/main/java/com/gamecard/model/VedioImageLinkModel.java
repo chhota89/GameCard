@@ -12,6 +12,10 @@ import java.util.List;
 
 public class VedioImageLinkModel {
 
+    @SerializedName("apkLink")
+    @Expose
+    private String apkLink;
+
     @SerializedName("vedioLink")
     @Expose
     private String vedioLink;
@@ -53,5 +57,13 @@ public class VedioImageLinkModel {
      */
     public void setImageList(List<String> imageList) {
         this.imageList = imageList;
+    }
+
+    public String getApkLink() {
+        return apkLink;
+    }
+
+    public void setApkLink(String apkLink) {
+        this.apkLink = apkLink;
     }
 }

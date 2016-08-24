@@ -11,9 +11,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.gamecard.R;
+import com.gamecard.model.GameResponseModel;
 import com.gamecard.utility.AnimationUtility;
 import com.gamecard.viewholder.GameInfoViewHoldr;
 import com.gamecard.viewholder.MoreViewHolder;
@@ -27,7 +30,7 @@ import java.util.List;
 
 public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
 
-    private final int APPLICATION_TYPE = 0, MORE_TYPE = 1;
+    private final int APPLICATION_TYPE = 0, MORE_TYPE = 1, SUGGESTION_TYPE=2;
     LayoutInflater inflater;
     List<Object> applicationInfos;
     PackageManager packageManager;
@@ -67,42 +70,43 @@ public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
     public ParentViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         ParentViewHolder viewHolder;
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        if (viewType == APPLICATION_TYPE) {
-            View viewUserInfo = inflater.inflate(R.layout.adapter_app_display, parent, false);
-            viewHolder = new GameInfoViewHoldr(viewUserInfo);
-        } else {
+        if (viewType == MORE_TYPE) {
             View viewUserInfo = inflater.inflate(R.layout.adapter_category_more, parent, false);
             viewHolder = new MoreViewHolder(viewUserInfo);
+        } else {
+            //type may be install app or suggestion
+            View viewUserInfo = inflater.inflate(R.layout.adapter_app_display, parent, false);
+            viewHolder = new GameInfoViewHoldr(viewUserInfo);
         }
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(ParentViewHolder holder1, int position) {
-        if (holder1.getItemViewType() == APPLICATION_TYPE) {
-            GameInfoViewHoldr holder = (GameInfoViewHoldr) holder1;
-            //AnimationUtility.animatedGrid(holder);
-            if (((ApplicationInfo) applicationInfos.get(position)).loadLabel(packageManager).length() > 7)
-                holder.appName.setText(((ApplicationInfo) applicationInfos.get(position)).loadLabel(packageManager).toString().substring(0, 7) + "..");
-            else
-                holder.appName.setText(((ApplicationInfo) applicationInfos.get(position)).loadLabel(packageManager));
-            Drawable drawable=cache.get(((ApplicationInfo) applicationInfos.get(position)).packageName);
-            if(drawable!=null)
-                holder.appImage.setImageDrawable(drawable);
-            else {
-                drawable=((ApplicationInfo) applicationInfos.get(position)).loadIcon(packageManager);
-                cache.put(((ApplicationInfo) applicationInfos.get(position)).packageName, drawable);
-                holder.appImage.setImageDrawable(drawable);
+        if (holder1.getItemViewType() == APPLICATION_TYPE || holder1.getItemViewType()==SUGGESTION_TYPE) {
+
+            if(applicationInfos.get(position) instanceof ApplicationInfo){
+                GameInfoViewHoldr holder = (GameInfoViewHoldr) holder1;
+                setGameName(holder.appName, String.valueOf(((ApplicationInfo) applicationInfos.get(position)).loadLabel(packageManager)));
+                Drawable drawable=cache.get(((ApplicationInfo) applicationInfos.get(position)).packageName);
+                if(drawable!=null)
+                    holder.appImage.setImageDrawable(drawable);
+                else {
+                    drawable=((ApplicationInfo) applicationInfos.get(position)).loadIcon(packageManager);
+                    cache.put(((ApplicationInfo) applicationInfos.get(position)).packageName, drawable);
+                    holder.appImage.setImageDrawable(drawable);
+                }
+
+            }else if(applicationInfos.get(position) instanceof GameResponseModel){
+
+                GameInfoViewHoldr holder = (GameInfoViewHoldr) holder1;
+                setGameName(holder.appName, ((GameResponseModel) applicationInfos.get(position)).getGametittle());
+
+                Glide.with(context).load(((GameResponseModel) applicationInfos.get(position)).getIconLink()).into(holder.appImage);
             }
 
-            if(position>previous)
-                AnimationUtility.animated(holder,true,position);
-            else
-                AnimationUtility.animated(holder,false,position);
 
-            previous=position;
-
-        } else {
+        } else if(holder1.getItemViewType() == MORE_TYPE) {
             MoreViewHolder moreViewHolder = (MoreViewHolder) holder1;
             //AnimationUtility.animatedGrid(moreViewHolder);
             StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) moreViewHolder.itemView.getLayoutParams();
@@ -117,6 +121,21 @@ public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
                 }
             });
         }
+
+        if(position>previous)
+            AnimationUtility.animated(holder1,true,position);
+        else
+            AnimationUtility.animated(holder1,false,position);
+        previous=position;
+
+    }
+
+    private void setGameName(TextView textView,String text){
+
+        if (text.length() > 7)
+            textView.setText(text.substring(0, 7) + "..");
+        else
+            textView.setText(text);
     }
 
     @Override
@@ -130,6 +149,8 @@ public class AdapterDisplayApp extends RecyclerView.Adapter<ParentViewHolder> {
             return APPLICATION_TYPE;
         else if (applicationInfos.get(position) instanceof String)
             return MORE_TYPE;
+        else if(applicationInfos.get(position) instanceof GameResponseModel)
+            return SUGGESTION_TYPE;
         else
             return -1;
     }
