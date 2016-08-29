@@ -25,7 +25,7 @@ public class ImageFragment extends Fragment {
 
     private final static String IMAGE_URL="IMAGE_URL";
     private String imageUrl;
-  //  static ProgressDialog progressDialog;
+
     private ProgressBar progressBar1;
 
     public ImageFragment() {
@@ -54,7 +54,7 @@ public class ImageFragment extends Fragment {
         // Inflate the layout for this fragment
         View view= inflater.inflate(R.layout.fragment_image_layout, container, false);
         ImageView appImage=(ImageView)view.findViewById(R.id.appImage);
-    //    progressDialog=new ProgressDialog(view.getContext());
+
         progressBar1 = (ProgressBar) view.findViewById(R.id.progressBar);
         progressBar1.setVisibility(View.GONE);
 
@@ -65,14 +65,14 @@ public class ImageFragment extends Fragment {
         Glide.with(view.getContext()).load(imageUrl).listener(new RequestListener<String, GlideDrawable>() {
             @Override
             public boolean onException(Exception e, String model, Target<GlideDrawable> target, boolean isFirstResource) {
-           //     progressDialog.hide();
+
                 progressBar1.setVisibility(View.GONE);
                 return false;
             }
 
             @Override
             public boolean onResourceReady(GlideDrawable resource, String model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-            //    progressDialog.hide();
+
                 progressBar1.setVisibility(View.GONE);
                 return false;
             }
@@ -83,8 +83,7 @@ public class ImageFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-     //   progressDialog.setProgress(ProgressDialog.STYLE_SPINNER);
-     //   progressDialog.show();
+
         progressBar1.setVisibility(View.VISIBLE);
     }
 
@@ -92,8 +91,6 @@ public class ImageFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
-     //   if(progressDialog!=null && progressDialog.isShowing())
-       //     progressDialog.hide();
         progressBar1.setVisibility(View.GONE);
     }
 }

@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.realm.Realm;
@@ -44,8 +45,7 @@ public class LoadDbAsync extends AsyncTask<Void, Void, Map<String,Object>> {
         gameList = new ArrayList<>();
         long start=System.currentTimeMillis();
         applicationInfoMap = ApplicationUtility.getInstallApp(ApplicationUtility.getAllPackages(context));
-        long end=System.currentTimeMillis();
-        Log.i(TAG, "doInBackground: **** "+(end-start));
+
 
         packageList = new ArrayList<>(applicationInfoMap.keySet());
         dbList = new ArrayList<>();
@@ -54,8 +54,11 @@ public class LoadDbAsync extends AsyncTask<Void, Void, Map<String,Object>> {
 
         // Build the query looking at all users:
         RealmResults<GameResponseModel> realmResults = realm.where(GameResponseModel.class).findAll();
+
         genrateList(realmResults);
 
+        long end=System.currentTimeMillis();
+        Log.i(TAG, "doInBackground: **** "+(end-start));
         return outputMap;
     }
 
