@@ -219,19 +219,16 @@ public class AppDescriptionActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     if (isOnline() && isExternalStorageWritable()) {
 
-                       // urlDownload = apklink;
-                      //  extension = ".apk";
-
                         // prepare intent which is triggered if the notification is selected
                         Intent intent1 = new Intent(Intent.ACTION_VIEW);
-                        // view or play audio,video or image file
+
                         try {
                             intent1.setDataAndType(Uri.parse("file://" + Environment.getExternalStorageDirectory()
                                     + "/GameCard/" + inputTitle1 + ".apk"), "application/vnd.android.package-archive");
                         }catch (Exception e){
                             e.printStackTrace();
                         }
-                        // use System.currentTimeMillis() to have a unique ID for the pending intent
+
                         final PendingIntent pIntent = PendingIntent.getActivity(AppDescriptionActivity.this,
                                 (int) System.currentTimeMillis(), intent1, 0);
 
@@ -239,7 +236,6 @@ public class AppDescriptionActivity extends AppCompatActivity {
                         //* Send optional extras to Download IntentService *//
                         intent.putExtra("url", inputApk);
                         intent.putExtra("title", inputTitle1);
-                        //intent.putExtra("extension", extension);
                         intent.putExtra("receiver", new ResultReceiver(new Handler()) {
                             @Override
                             protected void onReceiveResult(int resultCode, Bundle resultData) {
@@ -258,11 +254,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
                                                 .setContentIntent(pIntent)
                                                 .setAutoCancel(true);
 
-                                        //Start a lengthy operation in a background thread
-                                      /*  mBuilder.setProgress(0, 0, true);*/
                                         // Issues the notification
                                         mNotifyManager.notify(id, mBuilder.build());
-                                       /* mBuilder.setAutoCancel(true);*/
                                         Toast.makeText(AppDescriptionActivity.this, "Download in PROGRESS...", Toast.LENGTH_LONG).show();
                                         break;
                                     case DownloadService.STATUS_FINISHED:
@@ -285,7 +278,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
                                         Toast.makeText(AppDescriptionActivity.this, error, Toast.LENGTH_LONG).show();
                                         break;
                                     case DownloadService.UPDATE_PROGRESS:
-                                        //  MainActivity.downloadStarted = true;
+
                                         mBuilder.setProgress(100,progress,false);
                                         mNotifyManager.notify(id, mBuilder.build());
 

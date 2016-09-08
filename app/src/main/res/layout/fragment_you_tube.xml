@@ -23,7 +23,6 @@
         android:layout_marginStart="50dp"
         android:layout_marginLeft="50dp"
         android:layout_alignParentBottom="true"/>
-
     <ImageView
         android:id="@+id/wifi"
         android:layout_width="wrap_content"
@@ -31,7 +30,6 @@
         android:src="@mipmap/ic_wifi_white_48dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
-
     <ImageView
         android:id="@+id/share"
         android:layout_width="wrap_content"

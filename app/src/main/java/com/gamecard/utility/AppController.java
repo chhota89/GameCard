@@ -20,7 +20,7 @@ import io.realm.RealmConfiguration;
 
 public class AppController extends Application {
 
-    private NetComponent mNetComponent;
+    private NetComponent mNetComponent, netComponent1;
 
     private MqttComponent mqttComponent;
 
@@ -43,6 +43,11 @@ public class AppController extends Application {
                 .netModule(new NetModule("http://192.168.0.142:8080/GameCard/"))
                 .build();
 
+        netComponent1 = DaggerNetComponent.builder()
+                .appModule(new AppModule(this))
+                .netModule(new NetModule("http://192.168.0.133:8080/GameCard/"))
+                .build();
+
         mqttComponent= DaggerMqttComponent.builder()
                 .appModule(new AppModule(this))
                 .mqttModule(new MqttModule())
@@ -51,6 +56,10 @@ public class AppController extends Application {
 
     public NetComponent getmNetComponent() {
         return mNetComponent;
+    }
+
+    public NetComponent getnetComponent1() {
+        return netComponent1;
     }
 
     public MqttComponent getMqttComponent() {
