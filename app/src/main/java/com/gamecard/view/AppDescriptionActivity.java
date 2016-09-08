@@ -260,7 +260,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
                                         break;
                                     case DownloadService.STATUS_FINISHED:
                                         //* Hide progress & extract result from bundle *//*
-                                        mBuilder.addAction(0, " \t\t\t\t\t\t\t\t\t\t\t\t\t\t View Downloads", pIntent);
+                                        mBuilder.addAction(0, " \t\t\t\t\t\t\t\t\t\t\t\t\t\t Install", pIntent);
                                         Toast.makeText(AppDescriptionActivity.this, "Download Complete", Toast.LENGTH_LONG).show();
 
                                         mBuilder.setContentText("Download Complete");
