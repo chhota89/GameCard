@@ -35,13 +35,16 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.gamecard.R;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.model.VedioImageLinkModel;
 import com.gamecard.utility.DownloadService;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -64,6 +67,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
     List<String> sharePackageSet;
     String sourceDir, loadLabel;
     private static int progress;
+    private ProgressBar mProgress;
+    private TextView showPercentage;
   //  String urlDownload;
     //String extension;
     int id = 1;
@@ -71,10 +76,12 @@ public class AppDescriptionActivity extends AppCompatActivity {
     String apklink , inputApk, title, inputTitle, inputTitle1;
     SharedPreferences sharedPreferences;
     ImageView bluetooth1,  wifi1, share1, open1, apkDownload1;
+    private int percentProgress4 = 0;
 
     Realm realm;
     ApplicationInfo applicationInfo;
     ViewPageAdapter viewPageAdapter;
+    FloatingActionMenu fab;
     ViewPager viewPager;
     String packageName;
 
@@ -92,9 +99,33 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
         setUpViewPager(viewPager);
 
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                if(position == 0){
+                    fab.hideMenu(false);
+                    apkDownload1.setVisibility(ImageView.INVISIBLE);
+                }else{
+                    fab.showMenu(false);
+                    apkDownload1.setVisibility(ImageView.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                Log.e(TAG,"onPageScrolledStateChanged called");
+            }
+        });
+
         View rootView = View.inflate(this,R.layout.activity_app_details,null);
         coordinatorLayout1=(CoordinatorLayout) rootView.findViewById(R.id.coordinatorLayout);
         bluetooth1 = (ImageView) findViewById(R.id.material_design_floating_action_bluetooth);
+        fab = (FloatingActionMenu) findViewById(R.id.material_design_android_floating_action_menu);
         wifi1 = (ImageView) findViewById(R.id.material_design_floating_action_wifi);
         share1 = (ImageView) findViewById(R.id.material_design_floating_action_share);
         open1 = (ImageView) findViewById(R.id.material_design_floating_action_open);
@@ -194,10 +225,15 @@ public class AppDescriptionActivity extends AppCompatActivity {
         GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo("packagename",packageName).findFirst();
         VedioImageLinkModel vedioImageLinkModel=new Gson().fromJson(realmResults.getJsonImageVedioLink(), VedioImageLinkModel.class);
         String vediolink=vedioImageLinkModel.getVedioLink();
-        apklink = vedioImageLinkModel.getApkLink();
-        inputApk = apklink.replace(" ","%20");
-        Log.i(TAG, "apklink:.............."+apklink);
-        Log.i(TAG, "inputApk:.............."+inputApk);
+
+        try {
+            apklink = vedioImageLinkModel.getApkLink();
+            inputApk = apklink.replace(" ", "%20");
+            Log.i(TAG, "apklink:.............." + apklink);
+            Log.i(TAG, "inputApk:.............." + inputApk);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         title = realmResults.getGametittle();
         inputTitle = title.replace(" ","_");
         inputTitle1 = inputTitle.trim();
@@ -209,6 +245,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
         mainLayout = (RelativeLayout) AppDescriptionActivity.this.findViewById(R.id.layout1);
         downloadLayout = (RelativeLayout) AppDescriptionActivity.this.findViewById(R.id.download1);
         apkDownload1 = (ImageView) findViewById(R.id.apkDownload);
+        mProgress = (ProgressBar) findViewById(R.id.progressBar);
+        showPercentage = (TextView) findViewById(R.id.percentProgress3);
 
         if(realmResults.getSuggestion()) {
             mainLayout.setVisibility(View.GONE);
@@ -219,12 +257,20 @@ public class AppDescriptionActivity extends AppCompatActivity {
                 public void onClick(View view) {
                     if (isOnline() && isExternalStorageWritable()) {
 
+                        mProgress.setVisibility(View.VISIBLE);
+                        showPercentage.setVisibility(View.VISIBLE);
+                        //showPercentage.setText("0 %");
+                        mProgress.setProgress(0);
+
                         // prepare intent which is triggered if the notification is selected
                         Intent intent1 = new Intent(Intent.ACTION_VIEW);
 
                         try {
-                            intent1.setDataAndType(Uri.parse("file://" + Environment.getExternalStorageDirectory()
-                                    + "/GameCard/" + inputTitle1 + ".apk"), "application/vnd.android.package-archive");
+                            intent1.setDataAndType(Uri.parse("file://" +
+                                    Environment.getExternalStorageDirectory()
+                                    + "/GameCenter/" + inputTitle1 + ".apk"),
+                                    "application/vnd.android.package-archive");
+
                         }catch (Exception e){
                             e.printStackTrace();
                         }
@@ -244,7 +290,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
                                     case DownloadService.STATUS_RUNNING:
                                         AppDescriptionActivity.downloadStarted = true;
 
-                                        mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                        mNotifyManager = (NotificationManager)
+                                                getSystemService(Context.NOTIFICATION_SERVICE);
                                         mBuilder = new NotificationCompat.Builder(AppDescriptionActivity.this);
                                         mBuilder.setContentTitle("Download")
                                                 .setContentText("Download in progress")
@@ -256,12 +303,14 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
                                         // Issues the notification
                                         mNotifyManager.notify(id, mBuilder.build());
-                                        Toast.makeText(AppDescriptionActivity.this, "Download in PROGRESS...", Toast.LENGTH_LONG).show();
+                                        Toast.makeText(AppDescriptionActivity.this,
+                                                "Download in PROGRESS...", Toast.LENGTH_LONG).show();
                                         break;
                                     case DownloadService.STATUS_FINISHED:
                                         //* Hide progress & extract result from bundle *//*
                                         mBuilder.addAction(0, " \t\t\t\t\t\t\t\t\t\t\t\t\t\t Install", pIntent);
-                                        Toast.makeText(AppDescriptionActivity.this, "Download Complete", Toast.LENGTH_LONG).show();
+                                        Toast.makeText(AppDescriptionActivity.this, "Download Complete",
+                                                Toast.LENGTH_LONG).show();
 
                                         mBuilder.setContentText("Download Complete");
                                         // Removes the progress bar
@@ -270,12 +319,14 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
                                         String results = resultData.getString("result");
                                         //* Update with result *//*
-                                        Toast.makeText(AppDescriptionActivity.this, results , Toast.LENGTH_LONG).show();
+                                        Toast.makeText(AppDescriptionActivity.this, results ,
+                                                Toast.LENGTH_LONG).show();
                                         break;
                                     case DownloadService.STATUS_ERROR:
                                         //* Handle the error *//*
                                         String error = resultData.getString(Intent.EXTRA_TEXT);
-                                        Toast.makeText(AppDescriptionActivity.this, error, Toast.LENGTH_LONG).show();
+                                        Toast.makeText(AppDescriptionActivity.this, error,
+                                                Toast.LENGTH_LONG).show();
                                         break;
                                     case DownloadService.UPDATE_PROGRESS:
 
@@ -283,12 +334,25 @@ public class AppDescriptionActivity extends AppCompatActivity {
                                         mNotifyManager.notify(id, mBuilder.build());
 
                                         progress = resultData.getInt("progress");
+                                        mProgress.setProgress(progress);
+
+                                        if(progress < 100){
+                                            percentProgress4 = percentProgress4 + 1;    // update progress
+                                            postProgress(percentProgress4);
+
+                                        }
                                         if (progress == 100) {
                                             try {
+                                                mProgress.setVisibility(View.INVISIBLE);
+                                                showPercentage.setVisibility(View.INVISIBLE);
+
                                                 Intent intent1 = new Intent(Intent.ACTION_VIEW);
                                                 // view apk file
-                                                intent1.setDataAndType(Uri.parse("file://" + Environment.getExternalStorageDirectory()
-                                                    + "/GameCard/" + inputTitle1 + ".apk"), "application/vnd.android.package-archive");
+                                                intent1.setDataAndType(Uri.parse("file://" +
+                                                        Environment.getExternalStorageDirectory()
+                                                    + "/GameCenter/" + inputTitle1 + ".apk"),
+                                                        "application/vnd.android.package-archive");
+
                                                 intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                                 startActivity(intent1);
                                             }catch (Exception e){
@@ -309,10 +373,12 @@ public class AppDescriptionActivity extends AppCompatActivity {
                         }
                         startService(intent);
                         if(downloadStarted) {
-                            Toast.makeText(AppDescriptionActivity.this, "PLEASE WAIT...", Toast.LENGTH_LONG).show();
+                            Toast.makeText(AppDescriptionActivity.this, "PLEASE WAIT...",
+                                    Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        Toast.makeText(AppDescriptionActivity.this, "You are Offline", Toast.LENGTH_LONG).show();
+                        Toast.makeText(AppDescriptionActivity.this, "You are Offline",
+                                Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -320,6 +386,12 @@ public class AppDescriptionActivity extends AppCompatActivity {
             mainLayout.setVisibility(View.VISIBLE);
             downloadLayout.setVisibility(View.GONE);
         }
+    }
+
+    private void postProgress(int percentProgress4) {
+        percentProgress4 = mProgress.getProgress();
+        String strProgress = String.valueOf(percentProgress4) + " %";
+        showPercentage.setText(strProgress);
     }
 
     class  ViewPageAdapter extends FragmentPagerAdapter {
@@ -334,7 +406,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             if(vedioPresent){
                 if(position==0){
-                    return YouTubeFragment.newInstance(vedioLink,sourceDir,loadLabel);
+                    return YouTubeFragment.newInstance(vedioLink,sourceDir,loadLabel,packageName);
                 }
             }
             return ImageFragment.newInstance(urlList.get(position));
@@ -360,6 +432,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             return null;
         }
+
     }
 
     public static boolean openApp(Context context, String packageName1) {
@@ -393,10 +466,12 @@ public class AppDescriptionActivity extends AppCompatActivity {
                 Log.i(TAG, "openShareOption: .....  .... .... ... " + resolveInfo.activityInfo.packageName);
                 if (sharePackageSet.contains(resolveInfo.activityInfo.packageName)) {
                     Intent intent = new Intent();
-                    intent.setComponent(new ComponentName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name));
+                    intent.setComponent(new ComponentName(resolveInfo.activityInfo.packageName,
+                            resolveInfo.activityInfo.name));
                     intent.setAction(Intent.ACTION_SEND);
                     intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(YouTubeFragment.SOURCE_DIR));
-                    intentList.add(new LabeledIntent(intent, resolveInfo.activityInfo.packageName, resolveInfo.loadLabel(manager), resolveInfo.icon));
+                    intentList.add(new LabeledIntent(intent, resolveInfo.activityInfo.packageName,
+                            resolveInfo.loadLabel(manager), resolveInfo.icon));
                 }
             }
            /* Intent intent = new Intent(AppDetailsActivity.this, BluetoothPeerList.class);

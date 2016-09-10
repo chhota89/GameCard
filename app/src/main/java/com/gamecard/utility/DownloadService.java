@@ -84,6 +84,7 @@ public class DownloadService extends IntentService {
     private String downloadData(String... aurl) throws IOException, DownloadException {
 
         path = Environment.getExternalStorageDirectory()+"/GameCenter/"+title+".apk";
+
         File file = new File(path);
         try {
             // Make sure the directory exists.
@@ -94,41 +95,8 @@ public class DownloadService extends IntentService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-      /*  path = Environment.getExternalStorageDirectory()+"/DownloadManager"+extension;
-        File file = new File(path);
-        try {
-            // Make sure the directory exists.
-            if(file!=null)
-                file.getParentFile().mkdirs();
-
-            // file.createNewFile();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-       /* FILE_NAME = "" + title + ".apk";
-        final File f = new File(Environment.getExternalStorageDirectory() + "/"
-                + "GameCard" + "/" + FILE_NAME);
 
         try {
-            // Make sure the directory exists.
-            File dirs = new File(f.getParent());
-            if (!dirs.exists())
-                dirs.mkdirs();
-            f.createNewFile();
-            return f.getAbsolutePath();
-        }catch (Exception e){
-            e.printStackTrace();
-        }*/
-
-        try {
-          /*  url = new URL(aurl[0]);
-            connection = (HttpURLConnection) url.openConnection();
-            fos = (lengthOfFile == 0) ? new FileOutputStream(path) : new FileOutputStream(path,true);
-            output = new BufferedOutputStream(fos, 1024);
-            connection.setRequestProperty("Range", "bytes=" + file.length() + "-");
-            connection.connect();
-            lengthOfFile = connection.getContentLength();
-            input = new BufferedInputStream(url.openStream());*/
 
             url = new URL(aurl[0]);
             connection = (HttpURLConnection) url.openConnection();

@@ -11,6 +11,7 @@
         android:id="@+id/apkDownload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="#ff0000"
         android:src="@mipmap/ic_file_download_white_48dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
@@ -19,5 +20,35 @@
         android:layout_marginEnd="18dp"
         android:layout_marginBottom="18dp"
         android:contentDescription="@string/download_apk"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:max="100"
+        android:layout_marginBottom="15dp"
+        android:paddingLeft="10dp"
+        android:visibility="invisible"
+        android:layout_alignBottom="@+id/apkDownload"
+        android:layout_toLeftOf="@+id/apkDownload"
+        android:layout_marginEnd="36dp" />
+
+    <TextView
+        android:id="@+id/percentProgress3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:hint="@string/percent"
+        android:visibility="invisible"
+        android:textColorHint="#ffffff"
+        android:textSize="18sp"
+        android:paddingLeft="18dp"
+        android:background="@android:color/transparent"
+        android:textColor="@android:color/white"
+        android:layout_alignTop="@+id/progressBar"
+        android:layout_alignRight="@+id/progressBar"
+        android:layout_alignEnd="@+id/progressBar" />
 
 </RelativeLayout>

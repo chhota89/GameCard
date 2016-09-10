@@ -32,6 +32,7 @@ import com.gamecard.callback.CallbackRestResponse;
 import com.gamecard.controller.RestCall;
 import com.gamecard.model.VideoDisplayModel;
 import com.gamecard.utility.YoutubeIdConverter;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerFragment;
@@ -48,9 +49,9 @@ public class YouTubeFragment extends Fragment {
     private static final String TAG = "AppDetailsActivity";
     public static final String SOURCE_DIR = "SOURCE_DIR";
     public static final String LABEL_NAME = "LABEL_NAME";
+    public static final String PACKAGE_NAME = "PACKAGE_NAME";
     private static final int RECOVERY_DIALOG_REQUEST = 1;
     public static String DEVELOPER_KEY = "AIzaSyDm3UWKKI1H6Mqhu5O5_vfzI5mlTt1h6II";
-    private static final String packageName="com.chi.CarKing";
     String videoid;
     YouTubePlayerFragment playerFragment;
     CoordinatorLayout coordinatorLayout;
@@ -58,8 +59,10 @@ public class YouTubeFragment extends Fragment {
     List<String> sharePackageSet;
     private String mVideo_id;
     private String mSource_dir;
+    private String mPackage_name;
     private CharSequence mLabel_name;
     private FragmentActivity myContext;
+    private VideoDisplayModel videoDisplayModel;
     private List<VideoDisplayModel> videoList;
     RecyclerView recyclerView;
     private Context context;
@@ -77,12 +80,14 @@ public class YouTubeFragment extends Fragment {
      * @return A new instance of fragment YouTubeFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static YouTubeFragment newInstance(String param1,String sourceDir,CharSequence labelName) {
+    public static YouTubeFragment newInstance(String param1,String sourceDir,CharSequence labelName,
+                                              String packageName1) {
         YouTubeFragment fragment = new YouTubeFragment();
         Bundle args = new Bundle();
         args.putString(YOUTUBE_FULL_LINK, param1);
         args.putString(SOURCE_DIR, sourceDir);
         args.putCharSequence(LABEL_NAME, labelName);
+        args.putString(PACKAGE_NAME, packageName1);
         fragment.setArguments(args);
         return fragment;
     }
@@ -105,6 +110,7 @@ public class YouTubeFragment extends Fragment {
             videoid = YoutubeIdConverter.getYoutubeVideoId(mVideo_id);
             mSource_dir = getArguments().getString(SOURCE_DIR);
             mLabel_name = getArguments().getCharSequence(LABEL_NAME);
+            mPackage_name = getArguments().getString(PACKAGE_NAME);
         }
     }
 
@@ -115,7 +121,6 @@ public class YouTubeFragment extends Fragment {
         YouTubePlayerSupportFragment youTubePlayerFragment = YouTubePlayerSupportFragment.newInstance();
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.youtube_layout, youTubePlayerFragment).commit();*/
-
 
         View view = inflater.inflate(R.layout.activity_video_display, container, false);
         /*YouTubePlayerSupportFragment youTubePlayerFragment = YouTubePlayerSupportFragment.newInstance();
@@ -131,12 +136,14 @@ public class YouTubeFragment extends Fragment {
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
         RestCall restCall = new RestCall(myContext);
-        restCall.getVideoDisplayList(packageName, new CallbackRestResponse() {
+        restCall.getVideoDisplayList(mPackage_name, new CallbackRestResponse() {
+
             @Override
             public void onResponse(List<VideoDisplayModel> videoResponseModel) {
                 videoList = videoResponseModel;
+                videoList.add(0, null);
                 recyclerView.setAdapter(new AdapterVideoDisplay(myContext,videoList,
-                        mSource_dir, mLabel_name));
+                        mSource_dir, mLabel_name, mPackage_name));
             }
             @Override
             public void onError(Throwable throwable) {

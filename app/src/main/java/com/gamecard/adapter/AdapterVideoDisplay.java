@@ -1,7 +1,6 @@
 package com.gamecard.adapter;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -22,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,10 +49,12 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     private static final String TAG = AdapterVideoDisplay.class.getSimpleName();
     private List<VideoDisplayModel> videos2;
     private Context context;
-    private String sourceDir;
+    private String sourceDir, packageName;
     private String inputTitle1, inputTitle, title, inputApk, apklink;
     private CharSequence loadLabel;
     private static int progress;
+    private ProgressBar mProgress;
+    private TextView show, showPercentage;
     private int id = 1;
     private String[] perms = {Manifest.permission_group.STORAGE};
     private int permsRequestCode = 200;
@@ -61,12 +63,13 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     private NotificationCompat.Builder mBuilder;
 
     public AdapterVideoDisplay(Context context, List<VideoDisplayModel> videos2,
-                               String sourceDir, CharSequence loadLabel){
+                               String sourceDir, CharSequence loadLabel, String packageName){
 
         this.videos2 = videos2;
         this.context = context;
-        this.sourceDir=sourceDir;
-        this.loadLabel=loadLabel;
+        this.sourceDir = sourceDir;
+        this.loadLabel = loadLabel;
+        this.packageName = packageName;
     }
 
     @Override
@@ -110,7 +113,8 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
                /* GameInfoViewHoldr holder1 = (GameInfoViewHoldr) holder;
                 setGameName(holder1.appName,((GameResponseModel) videos1.get(position)).getGametittle());
-                Glide.with(context).load(((GameResponseModel) videos1.get(position)).getIconLink()).into(holder1.appImage);*/
+                Glide.with(context).load(((GameResponseModel) videos1.get(position)).getIconLink())
+                .into(holder1.appImage);*/
 
             }
             else{
@@ -123,7 +127,8 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                 holder2.videoDisplay.setMediaController(mediaController);
                 holder2.videoDisplay.start();*/
 
-                YouTubeFragment.newInstance(videos2.get(position).getVedioLink(), sourceDir, loadLabel);
+                YouTubeFragment.newInstance(videos2.get(position).getVedioLink(), sourceDir,
+                        loadLabel, packageName);
 
                 setGameName(holder2.gameTitle, videos2.get(position).getGameTitle());
 
@@ -134,96 +139,103 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                 holder2.apkDownload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-
-                        apklink = (String) videos2.get(position).getApkLink();
-                        inputApk = apklink.replace(" ","%20");
-                        title = videos2.get(position).getGameTitle();
-                        inputTitle = title.replace(" ","_");
-                        inputTitle1 = inputTitle.trim();
+                        try {
+                            apklink = (String) videos2.get(position).getApkLink();
+                            inputApk = apklink.replace(" ", "%20");
+                            title = videos2.get(position).getGameTitle();
+                            inputTitle = title.replace(" ", "_");
+                            inputTitle1 = inputTitle.trim();
+                        } catch (Exception e){
+                            e.printStackTrace();
+                        }
 
                         if (isExternalStorageWritable()) {
 
-                            if (apklink == null) {
-                                Toast.makeText(context, "Can't perform downloading", Toast.LENGTH_LONG).show();
-                            } else {
+                            // prepare intent which is triggered if the notification is selected
+                            Intent intent1 = new Intent(Intent.ACTION_VIEW);
 
-                                // prepare intent which is triggered if the notification is selected
-                                Intent intent1 = new Intent(Intent.ACTION_VIEW);
+                            try {
+                                intent1.setDataAndType(Uri.parse("file://" +
+                                        Environment.getExternalStorageDirectory()
+                                        + "/GameCenter/" + inputTitle1 + ".apk"),
+                                        "application/vnd.android.package-archive");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
 
-                                try {
-                                    intent1.setDataAndType(Uri.parse("file://" + Environment.getExternalStorageDirectory()
-                                            + "/GameCard/" + inputTitle1 + ".apk"), "application/vnd.android.package-archive");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
+                            final PendingIntent pIntent = PendingIntent.getActivity(context,
+                                    (int) System.currentTimeMillis(), intent1, 0);
 
-                                final PendingIntent pIntent = PendingIntent.getActivity(context,
-                                        (int) System.currentTimeMillis(), intent1, 0);
+                            Intent intent = new Intent(context, DownloadService.class);
+                            //* Send optional extras to Download IntentService *//
+                            intent.putExtra("url", inputApk);
+                            intent.putExtra("title", inputTitle1);
+                            intent.putExtra("receiver", new ResultReceiver(new Handler()) {
+                                @Override
+                                protected void onReceiveResult(int resultCode, Bundle resultData) {
+                                    super.onReceiveResult(resultCode, resultData);
+                                    switch (resultCode) {
+                                        case DownloadService.STATUS_RUNNING:
+                                            downloadStarted = true;
 
-                                Intent intent = new Intent(context, DownloadService.class);
-                                //* Send optional extras to Download IntentService *//
-                                intent.putExtra("url", inputApk);
-                                intent.putExtra("title", inputTitle1);
-                                intent.putExtra("receiver", new ResultReceiver(new Handler()) {
-                                    @Override
-                                    protected void onReceiveResult(int resultCode, Bundle resultData) {
-                                        super.onReceiveResult(resultCode, resultData);
-                                        switch (resultCode) {
-                                            case DownloadService.STATUS_RUNNING:
-                                                downloadStarted = true;
+                                            mNotifyManager = (NotificationManager) context
+                                                    .getSystemService(Context.NOTIFICATION_SERVICE);
+                                            mBuilder = new NotificationCompat.Builder(context);
+                                            mBuilder.setContentTitle("Download")
+                                                    .setContentText("Download in progress")
+                                                    .setOngoing(true)
+                                                    .setProgress(100, 0, false)
+                                                    .setSmallIcon(R.drawable.ic_download)
+                                                    .setContentIntent(pIntent)
+                                                    .setAutoCancel(true);
 
-                                                mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                                                mBuilder = new NotificationCompat.Builder(context);
-                                                mBuilder.setContentTitle("Download")
-                                                        .setContentText("Download in progress")
-                                                        .setOngoing(true)
-                                                        .setProgress(100, 0, false)
-                                                        .setSmallIcon(R.drawable.ic_download)
-                                                        .setContentIntent(pIntent)
-                                                        .setAutoCancel(true);
+                                            // Issues the notification
+                                            mNotifyManager.notify(id, mBuilder.build());
+                                            Toast.makeText(context, "Download in PROGRESS...",
+                                                    Toast.LENGTH_LONG).show();
+                                            break;
+                                        case DownloadService.STATUS_FINISHED:
+                                            //* Hide progress & extract result from bundle *//*
+                                            mBuilder.addAction(0, " \t\t\t\t\t\t\t\t\t\t\t\t\t\t Install",
+                                                    pIntent);
+                                            Toast.makeText(context, "Download Complete",
+                                                    Toast.LENGTH_LONG).show();
 
-                                                // Issues the notification
-                                                mNotifyManager.notify(id, mBuilder.build());
-                                                Toast.makeText(context, "Download in PROGRESS...", Toast.LENGTH_LONG).show();
-                                                break;
-                                            case DownloadService.STATUS_FINISHED:
-                                                //* Hide progress & extract result from bundle *//*
-                                                mBuilder.addAction(0, " \t\t\t\t\t\t\t\t\t\t\t\t\t\t Install", pIntent);
-                                                Toast.makeText(context, "Download Complete", Toast.LENGTH_LONG).show();
+                                            mBuilder.setContentText("Download Complete");
+                                            // Removes the progress bar
+                                            mBuilder.setProgress(0, 0, false);
+                                            mNotifyManager.notify(id, mBuilder.build());
 
-                                                mBuilder.setContentText("Download Complete");
-                                                // Removes the progress bar
-                                                mBuilder.setProgress(0, 0, false);
-                                                mNotifyManager.notify(id, mBuilder.build());
+                                            String results = resultData.getString("result");
+                                            //* Update with result *//*
+                                            Toast.makeText(context, results, Toast.LENGTH_LONG).show();
+                                            break;
+                                        case DownloadService.STATUS_ERROR:
+                                            //* Handle the error *//*
+                                            String error = resultData.getString(Intent.EXTRA_TEXT);
+                                            Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+                                            break;
+                                        case DownloadService.UPDATE_PROGRESS:
 
-                                                String results = resultData.getString("result");
-                                                //* Update with result *//*
-                                                Toast.makeText(context, results, Toast.LENGTH_LONG).show();
-                                                break;
-                                            case DownloadService.STATUS_ERROR:
-                                                //* Handle the error *//*
-                                                String error = resultData.getString(Intent.EXTRA_TEXT);
-                                                Toast.makeText(context, error, Toast.LENGTH_LONG).show();
-                                                break;
-                                            case DownloadService.UPDATE_PROGRESS:
+                                            mBuilder.setProgress(100, progress, false);
+                                            mNotifyManager.notify(id, mBuilder.build());
 
-                                                mBuilder.setProgress(100, progress, false);
-                                                mNotifyManager.notify(id, mBuilder.build());
-
-                                                progress = resultData.getInt("progress");
-                                                if (progress == 100) {
-                                                    try {
-                                                        Intent intent1 = new Intent(Intent.ACTION_VIEW);
-                                                        // view apk file
-                                                        intent1.setDataAndType(Uri.parse("file://" + Environment.getExternalStorageDirectory()
-                                                                + "/GameCard/" + inputTitle1 + ".apk"), "application/vnd.android.package-archive");
-                                                        intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                        context.startActivity(intent1);
-                                                    } catch (Exception e) {
-                                                        e.printStackTrace();
-                                                    }
+                                            progress = resultData.getInt("progress");
+                                            if (progress == 100) {
+                                                try {
+                                                    Intent intent1 = new Intent(Intent.ACTION_VIEW);
+                                                    // view apk file
+                                                    intent1.setDataAndType(Uri.parse("file://" +
+                                                            Environment.getExternalStorageDirectory()
+                                                            + "/GameCenter/" + inputTitle1 + ".apk"),
+                                                            "application/vnd.android.package-archive");
+                                                    intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                    context.startActivity(intent1);
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
                                                 }
-                                                break;
+                                            }
+                                            break;
                                         }
                                     }
                                 });
@@ -239,17 +251,15 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                                 if (downloadStarted) {
                                     Toast.makeText(context, "PLEASE WAIT...", Toast.LENGTH_LONG).show();
                                 }
-                            }
                         }else {
                             Toast.makeText(context, "No sufficient memory for storing", Toast.LENGTH_LONG).show();
                         }
-
                     }
                 });
 
-                final View v1= holder2.gameTitle;
-                final View v2 = holder2.packageName;
-                final View v3 = holder2.apkDownload;
+                final View v1 = holder2.apkDownload;
+                final View v2= holder2.gameTitle;
+                final View v3 = holder2.packageName;
                 final View v4 = holder2.iconImage;
 
                 if(v1.getVisibility() == View.VISIBLE && v2.getVisibility() == View.VISIBLE
