@@ -17,21 +17,30 @@ import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.FrameLayout;
+import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.gamecard.R;
+import com.gamecard.exoplayer.DashRendererBuilder;
+import com.gamecard.exoplayer.DemoPlayer;
+import com.gamecard.exoplayer.DemoUtil;
+import com.gamecard.exoplayer.WidevineTestMediaDrmCallback;
 import com.gamecard.model.VideoDisplayModel;
 import com.gamecard.utility.DownloadService;
 import com.gamecard.view.YouTubeFragment;
 import com.gamecard.viewholder.GameInfoViewHoldr;
 import com.gamecard.viewholder.VideoDisplayViewHolder;
+import com.google.android.exoplayer.VideoSurfaceView;
 
 import java.util.List;
 
@@ -41,7 +50,8 @@ import static android.support.v4.app.ActivityCompat.requestPermissions;
  * Created by bridgeit on 29/8/16.
  */
 
-public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+        implements SurfaceHolder.Callback, DemoPlayer.Listener{
 
     private static final int VIDEO_TYPE = 0;
     private static final int VIDEO_DISPLAY_TYPE = 1;
@@ -61,15 +71,46 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     private SharedPreferences sharedPreferences;
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
+    private DemoPlayer player;
+    private boolean autoPlay = true;
+    private MediaController mediaController;
+    private boolean playerNeedsPrepare;
+    private VideoSurfaceView videoView;
+    private DashRendererBuilder dashRendererBuilder;
+  //  private IVideoDisplay iVideoDisplay;
+    FrameLayout frameLayout;
+    String userAgent;
+    List<String> contentIdList, contentUriList;
 
     public AdapterVideoDisplay(Context context, List<VideoDisplayModel> videos2,
-                               String sourceDir, CharSequence loadLabel, String packageName){
+                               String sourceDir, CharSequence loadLabel, String packageName,
+                               List<String> list, List<String> contentUriList,
+                               DemoPlayer player, DashRendererBuilder dashRendererBuilder,
+                               FrameLayout frameLayout){
 
         this.videos2 = videos2;
         this.context = context;
         this.sourceDir = sourceDir;
         this.loadLabel = loadLabel;
         this.packageName = packageName;
+        userAgent= DemoUtil.getUserAgent(context);
+        this.frameLayout = frameLayout;
+   //     this.iVideoDisplay=iVideoDisplay;
+
+        this.contentIdList =list;
+        this.contentUriList=contentUriList;
+        this.player=player;
+        this.dashRendererBuilder=dashRendererBuilder;
+        mediaController = new MediaController(context);
+        //mediaController.setAnchorView(holder.root);
+
+        try{
+            player.addListener(this);
+            mediaController.setMediaPlayer(player.getPlayerControl());
+            mediaController.setEnabled(true);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -127,8 +168,34 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                 holder2.videoDisplay.setMediaController(mediaController);
                 holder2.videoDisplay.start();*/
 
-                YouTubeFragment.newInstance(videos2.get(position).getVedioLink(), sourceDir,
+              /*  YouTubeFragment.newInstance(videos2.get(position).getVedioLink(), sourceDir,
                         loadLabel, packageName);
+*/
+
+                try {
+                    YouTubeFragment.vedioPlay = false;
+                  //  iVideoDisplay.showingItemPostion(position);
+                    this.videoView = holder2.videoView;
+                    dashRendererBuilder.setContentId(contentIdList.get(position));
+                    dashRendererBuilder.setUrl(contentUriList.get(position));
+                    dashRendererBuilder.setMediaDrmCallback(new WidevineTestMediaDrmCallback(contentIdList.get(position)));
+                    mediaController.setAnchorView(holder2.videosLayout);
+                    player.seekTo(0);
+                    player.setSurface(holder2.videoView.getHolder().getSurface());
+                    player.prepare();
+
+                    holder2.videoView.setOnTouchListener(new View.OnTouchListener() {
+                        @Override
+                        public boolean onTouch(View view, MotionEvent motionEvent) {
+                            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                                toggleControlsVisibility();
+                            }
+                            return true;
+                        }
+                    });
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
                 setGameName(holder2.gameTitle, videos2.get(position).getGameTitle());
 
@@ -327,4 +394,69 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
         return (sharedPreferences.getBoolean(permission, true));
     }
 
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        if (player != null) {
+            player.setSurface(surfaceHolder.getSurface());
+            maybeStartPlayback();
+        }
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        if (player != null) {
+            player.blockingClearSurface();
+        }
+    }
+
+    @Override
+    public void onStateChanged(boolean playWhenReady, int playbackState) {
+        if (playbackState == com.google.android.exoplayer.ExoPlayer.STATE_ENDED) {
+            showControls();
+        }
+    }
+
+    @Override
+    public void onError(Exception e) {
+        playerNeedsPrepare = true;
+        showControls();
+    }
+
+    @Override
+    public void onVideoSizeChanged(int width, int height, float pixelWidthHeightRatio) {
+        //shutterView.setVisibility(View.GONE);
+        videoView.setVideoWidthHeightRatio(
+                height == 0 ? 1 : (width * pixelWidthHeightRatio) / height);
+    }
+
+    private void maybeStartPlayback() {
+        if (autoPlay && (player.getSurface().isValid()
+                || player.getSelectedTrackIndex(DemoPlayer.TYPE_VIDEO) == DemoPlayer.DISABLED_TRACK)) {
+            player.setPlayWhenReady(true);
+            autoPlay = false;
+        }
+    }
+
+    private void showControls() {
+        mediaController.show(0);
+        //debugRootView.setVisibility(View.VISIBLE);
+    }
+
+    private void toggleControlsVisibility() {
+        if (mediaController.isShowing()) {
+            mediaController.hide();
+            //debugRootView.setVisibility(View.GONE);
+        } else {
+            mediaController.show(0);
+        }
+    }
+
+   /* public interface IVideoDisplay{
+        void showingItemPostion(int postion);
+    }*/
 }

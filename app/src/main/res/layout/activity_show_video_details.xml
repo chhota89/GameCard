@@ -26,7 +26,13 @@
         android:layout_marginBottom="40dp"
         android:layout_toRightOf="@+id/icon_image"/>
 
-    <VideoView
+   <!-- <VideoView
+        android:id="@+id/video_display"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:layout_centerInParent="true"/>-->
+
+    <com.google.android.exoplayer.VideoSurfaceView
         android:id="@+id/video_display"
         android:layout_width="match_parent"
         android:layout_height="240dp"

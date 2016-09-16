@@ -9,6 +9,7 @@ import android.content.pm.LabeledIntent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +17,6 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -24,19 +24,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.FrameLayout;
+import android.widget.MediaController;
 
 import com.gamecard.R;
 import com.gamecard.adapter.AdapterVideoDisplay;
 import com.gamecard.callback.CallbackRestResponse;
 import com.gamecard.controller.RestCall;
+import com.gamecard.exoplayer.DashRendererBuilder;
+import com.gamecard.exoplayer.DemoPlayer;
+import com.gamecard.exoplayer.DemoUtil;
+import com.gamecard.exoplayer.EventLogger;
 import com.gamecard.model.VideoDisplayModel;
 import com.gamecard.utility.YoutubeIdConverter;
-import com.github.clans.fab.FloatingActionMenu;
-import com.google.android.youtube.player.YouTubeInitializationResult;
-import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerFragment;
-import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +53,14 @@ public class YouTubeFragment extends Fragment {
     public static final String PACKAGE_NAME = "PACKAGE_NAME";
     private static final int RECOVERY_DIALOG_REQUEST = 1;
     public static String DEVELOPER_KEY = "AIzaSyDm3UWKKI1H6Mqhu5O5_vfzI5mlTt1h6II";
+
+    String contentUri = "http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"
+            + "as=fmp4_audio_clear,fmp4_sd_hd_clear&sparams=ip,ipbits,expire,as&ip=0.0.0.0&ipbits=0&"
+            + "expire=19000000000&signature=7181C59D0252B285D593E1B61D985D5B7C98DE2A."
+            + "5B445837F55A40E0F28AACAA047982E372D177E2&key=ik0";
+
+    String contentId = "3aa39fa2cc27967f";
+
     String videoid;
     YouTubePlayerFragment playerFragment;
     CoordinatorLayout coordinatorLayout;
@@ -65,8 +74,22 @@ public class YouTubeFragment extends Fragment {
     private VideoDisplayModel videoDisplayModel;
     private List<VideoDisplayModel> videoList;
     RecyclerView recyclerView;
+    private AdapterVideoDisplay adapter;
     private Context context;
+    private DemoPlayer player;
+    private MediaController mediaController;
+    private long playerPosition;
+    private EventLogger eventLogger;
+    private boolean playerNeedsPrepare;
+    private boolean autoPlay = true;
+    String userAgent;
+    private DashRendererBuilder dashRendererBuilder;
   //  ImageView bluetooth1,  wifi1, share1;
+
+    public static boolean vedioPlay=true;
+    public static int positionToPlay=0;
+    FrameLayout frameLayout;
+
 
     public YouTubeFragment() {
         // Required empty public constructor
@@ -122,16 +145,41 @@ public class YouTubeFragment extends Fragment {
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.youtube_layout, youTubePlayerFragment).commit();*/
 
-        View view = inflater.inflate(R.layout.activity_video_display, container, false);
+        final View view = inflater.inflate(R.layout.activity_video_display, container, false);
         /*YouTubePlayerSupportFragment youTubePlayerFragment = YouTubePlayerSupportFragment.newInstance();
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.youtube_layout, youTubePlayerFragment).commit();*/
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(myContext,
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(myContext,
                 LinearLayoutManager.VERTICAL, false);
+
+        final List<String> contentIdList = new ArrayList<>();
+        final List<String> contentUriList = new ArrayList<>();
+
+        contentIdList.add(0,"Continue Displaying");
+        contentIdList.add(contentId);
+        contentIdList.add(contentId);
+        contentIdList.add(contentId);
+        contentIdList.add(contentId);
+        contentIdList.add(contentId);
+        contentIdList.add(contentId);
+        contentIdList.add(contentId);
+
+        contentUriList.add(0,"Continue Displaying");
+        contentUriList.add(contentUri);
+        contentUriList.add(contentUri);
+        contentUriList.add(contentUri);
+        contentUriList.add(contentUri);
+        contentUriList.add(contentUri);
+        contentUriList.add(contentUri);
+        contentUriList.add(contentUri);
+
+        userAgent= DemoUtil.getUserAgent(myContext);
+        prepareExoPlayer();
 
         //Initializing the RecyclerView
         recyclerView = (RecyclerView) view.findViewById(R.id.videoDisplayList);
+        frameLayout = (FrameLayout) view.findViewById(R.id.youtube_layout);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
@@ -140,14 +188,57 @@ public class YouTubeFragment extends Fragment {
 
             @Override
             public void onResponse(List<VideoDisplayModel> videoResponseModel) {
+                Log.i(TAG, "onResponseCalled: .........................................");
                 videoList = videoResponseModel;
                 videoList.add(0, null);
-                recyclerView.setAdapter(new AdapterVideoDisplay(myContext,videoList,
-                        mSource_dir, mLabel_name, mPackage_name));
+                adapter = new AdapterVideoDisplay(myContext,videoList,
+                        mSource_dir, mLabel_name, mPackage_name, contentIdList, contentUriList,
+                        player, dashRendererBuilder, frameLayout);
+                recyclerView.setAdapter(adapter);
+                recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                        super.onScrolled(recyclerView, dx, dy);
+                    }
+
+                    @Override
+                    public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                        super.onScrollStateChanged(recyclerView, newState);
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            //Call your method here for next set of data
+                            int position = linearLayoutManager.findFirstVisibleItemPosition();
+                            Rect rect = new Rect();
+                            linearLayoutManager.findViewByPosition(position).getGlobalVisibleRect(rect);
+
+                            int lastPostion = linearLayoutManager.findLastVisibleItemPosition();
+                            Rect lastRect = new Rect();
+                            linearLayoutManager.findViewByPosition(lastPostion).getGlobalVisibleRect(lastRect);
+
+
+                            if(rect.height()>lastRect.height()){
+                                if(positionToPlay != position){
+                                    vedioPlay=true;
+                                    positionToPlay=position;
+                                    adapter.notifyItemChanged(position);
+                                }
+                            }else
+                            if(positionToPlay != lastPostion){
+                                vedioPlay=true;
+                                positionToPlay=lastPostion;
+                                adapter.notifyItemChanged(lastPostion);
+                            }
+
+                            Log.i(TAG, "onScrollStateChanged: rect .............  ......."+rect.height()+"  "+rect.width() );
+                            Log.i(TAG, "onScrollStateChanged: rect .............  ......."+lastRect.height()+"  "+lastRect.width() );
+
+                        }
+                    }
+                });
             }
+
             @Override
             public void onError(Throwable throwable) {
-
+                Log.i(TAG, "onErrorCalled: .........................................");
             }
         });
 
@@ -201,6 +292,49 @@ public class YouTubeFragment extends Fragment {
         });*/
 
         return view;
+    }
+
+    private void prepareExoPlayer(){
+        if (player == null) {
+
+               /* player = new DemoPlayer(new DashRendererBuilder(userAgent, contentUri.toString(), contentId,
+                        new WidevineTestMediaDrmCallback(contentId)));*/
+            dashRendererBuilder=new DashRendererBuilder(userAgent);
+            player = new DemoPlayer(dashRendererBuilder);
+            player.seekTo(playerPosition);
+            playerNeedsPrepare = true;
+
+            eventLogger = new EventLogger();
+            eventLogger.startSession();
+            player.addListener(eventLogger);
+            player.setInfoListener(eventLogger);
+            player.setInternalErrorListener(eventLogger);
+            player.setPlayWhenReady(true);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        positionToPlay=0;
+        vedioPlay=true;
+        releasePlayer();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        releasePlayer();
+    }
+
+    private void releasePlayer() {
+        if (player != null) {
+            playerPosition = player.getCurrentPosition();
+            player.release();
+            player = null;
+            eventLogger.endSession();
+            eventLogger = null;
+        }
     }
 
     @Override

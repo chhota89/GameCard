@@ -8,6 +8,7 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 import com.gamecard.R;
+import com.google.android.exoplayer.VideoSurfaceView;
 
 /**
  * Created by bridgeit on 29/8/16.
@@ -16,7 +17,7 @@ import com.gamecard.R;
 public class VideoDisplayViewHolder extends RecyclerView.ViewHolder {
 
     public RelativeLayout videosLayout;
-    public VideoView videoDisplay;
+    public VideoSurfaceView videoView;
     public TextView gameTitle, packageName;
     public ImageView iconImage, apkDownload;
 
@@ -24,7 +25,7 @@ public class VideoDisplayViewHolder extends RecyclerView.ViewHolder {
         super(view);
 
         videosLayout = (RelativeLayout) view.findViewById(R.id.videos_layout);
-        videoDisplay = (VideoView) view.findViewById(R.id.video_display);
+        videoView = (VideoSurfaceView) view.findViewById(R.id.video_display);
         gameTitle = (TextView) view.findViewById(R.id.game_title);
         packageName = (TextView) view.findViewById(R.id.package_name);
        /* apkLink = (TextView) view.findViewById(R.id.apk_link);*/
