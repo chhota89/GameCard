@@ -45,7 +45,7 @@ public class AppController extends Application {
 
         netComponent1 = DaggerNetComponent.builder()
                 .appModule(new AppModule(this))
-                .netModule(new NetModule("http://192.168.0.125:8080/GameCard/"))
+                .netModule(new NetModule("http://192.168.0.132:8080/GameCard/"))
                 .build();
 
         mqttComponent= DaggerMqttComponent.builder()

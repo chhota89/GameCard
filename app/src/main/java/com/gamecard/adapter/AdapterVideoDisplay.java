@@ -34,6 +34,7 @@ import com.gamecard.R;
 import com.gamecard.exoplayer.DashRendererBuilder;
 import com.gamecard.exoplayer.DemoPlayer;
 import com.gamecard.exoplayer.DemoUtil;
+import com.gamecard.exoplayer.LoadVedioLink;
 import com.gamecard.exoplayer.WidevineTestMediaDrmCallback;
 import com.gamecard.model.VideoDisplayModel;
 import com.gamecard.utility.DownloadService;
@@ -42,6 +43,7 @@ import com.gamecard.viewholder.GameInfoViewHoldr;
 import com.gamecard.viewholder.VideoDisplayViewHolder;
 import com.google.android.exoplayer.VideoSurfaceView;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static android.support.v4.app.ActivityCompat.requestPermissions;
@@ -59,13 +61,12 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     private static final String TAG = AdapterVideoDisplay.class.getSimpleName();
     private List<VideoDisplayModel> videos2;
     private Context context;
-    private String sourceDir, packageName;
     private String inputTitle1, inputTitle, title, inputApk, apklink;
     private CharSequence loadLabel;
     private static int progress;
     private ProgressBar mProgress;
     private TextView show, showPercentage;
-    private int id = 1;
+    private int id = 1, j;
     private String[] perms = {Manifest.permission_group.STORAGE};
     private int permsRequestCode = 200;
     private SharedPreferences sharedPreferences;
@@ -77,32 +78,22 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     private boolean playerNeedsPrepare;
     private VideoSurfaceView videoView;
     private DashRendererBuilder dashRendererBuilder;
-  //  private IVideoDisplay iVideoDisplay;
     FrameLayout frameLayout;
     String userAgent;
-    List<String> contentIdList, contentUriList;
+    private List<String> videoList1 , videoListLink;
+    String[] strArray;
 
     public AdapterVideoDisplay(Context context, List<VideoDisplayModel> videos2,
-                               String sourceDir, CharSequence loadLabel, String packageName,
-                               List<String> list, List<String> contentUriList,
                                DemoPlayer player, DashRendererBuilder dashRendererBuilder,
                                FrameLayout frameLayout){
 
         this.videos2 = videos2;
         this.context = context;
-        this.sourceDir = sourceDir;
-        this.loadLabel = loadLabel;
-        this.packageName = packageName;
         userAgent= DemoUtil.getUserAgent(context);
         this.frameLayout = frameLayout;
-   //     this.iVideoDisplay=iVideoDisplay;
-
-        this.contentIdList =list;
-        this.contentUriList=contentUriList;
         this.player=player;
         this.dashRendererBuilder=dashRendererBuilder;
         mediaController = new MediaController(context);
-        //mediaController.setAnchorView(holder.root);
 
         try{
             player.addListener(this);
@@ -147,12 +138,14 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
 
         try {
             if (holder.getItemViewType() == VIDEO_TYPE) {
 
-               /* GameInfoViewHoldr holder1 = (GameInfoViewHoldr) holder;
+               /*
+                   Log.i(TAG, "VIDEO_TYPECalled: ....................................."+i);
+                GameInfoViewHoldr holder1 = (GameInfoViewHoldr) holder;
                 setGameName(holder1.appName,((GameResponseModel) videos1.get(position)).getGametittle());
                 Glide.with(context).load(((GameResponseModel) videos1.get(position)).getIconLink())
                 .into(holder1.appImage);*/
@@ -161,41 +154,46 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
             else{
 
                 VideoDisplayViewHolder holder2 = (VideoDisplayViewHolder) holder;
+                videoList1 = new LinkedList<String>();
+                videoListLink = new LinkedList<String>();
 
-             /*   holder2.videoDisplay.setVideoURI(Uri.parse(videos2.get(position).getVedioLink()));
-                MediaController mediaController = new MediaController(context);
-                mediaController.setAnchorView(holder2.videoDisplay);
-                holder2.videoDisplay.setMediaController(mediaController);
-                holder2.videoDisplay.start();*/
+                final String videoListId = videos2.get(position).getVedioLink();
+                strArray = new String[] {videoListId};
 
-              /*  YouTubeFragment.newInstance(videos2.get(position).getVedioLink(), sourceDir,
-                        loadLabel, packageName);
-*/
+                new LoadVedioLink(context) {
+                    @Override
+                    protected void onPostExecute(String s) {
+                        super.onPostExecute(s);
+                        if(s != null) {
+                            int i=0;
 
-                try {
-                    YouTubeFragment.vedioPlay = false;
-                  //  iVideoDisplay.showingItemPostion(position);
-                    this.videoView = holder2.videoView;
-                    dashRendererBuilder.setContentId(contentIdList.get(position));
-                    dashRendererBuilder.setUrl(contentUriList.get(position));
-                    dashRendererBuilder.setMediaDrmCallback(new WidevineTestMediaDrmCallback(contentIdList.get(position)));
-                    mediaController.setAnchorView(holder2.videosLayout);
-                    player.seekTo(0);
-                    player.setSurface(holder2.videoView.getHolder().getSurface());
-                    player.prepare();
+                            try {
+                                j = position;
 
-                    holder2.videoView.setOnTouchListener(new View.OnTouchListener() {
-                        @Override
-                        public boolean onTouch(View view, MotionEvent motionEvent) {
-                            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                                toggleControlsVisibility();
+                                while (j != i) {
+                                    if(j<i){
+                                       --i;
+                                        i--;
+                                        break;
+                                    }
+                                    videoList1.add(0, "Continue Displaying");
+                                    videoListLink.add(0, "Continue Displaying");
+                                    i++;
+                                }
+
+                                videoList1.add(j, videoListId);
+                                videoListLink.add(j, s);
+
+                            }catch (Exception e){
+                                e.printStackTrace();
                             }
-                            return true;
+
+                            if(videoListLink != null){
+                                loadVideos(videoList1, videoListLink, holder, position);
+                            }
                         }
-                    });
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+                    }
+                }.execute(strArray);
 
                 setGameName(holder2.gameTitle, videos2.get(position).getGameTitle());
 
@@ -369,6 +367,39 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
         }
     }
 
+    private void loadVideos(List<String> videoList1, List<String> videoListLink,
+                            RecyclerView.ViewHolder holder, final int position){
+
+        try {
+            VideoDisplayViewHolder holder2 = (VideoDisplayViewHolder) holder;
+
+            YouTubeFragment.vedioPlay = false;
+
+            this.videoView = holder2.videoView;
+
+            dashRendererBuilder.setContentId(videoList1.get(position));
+            dashRendererBuilder.setUrl(videoListLink.get(position));
+            dashRendererBuilder.setMediaDrmCallback(new WidevineTestMediaDrmCallback(videoList1.get(position)));
+
+            mediaController.setAnchorView(holder2.videosLayout);
+            player.seekTo(0);
+            player.setSurface(holder2.videoView.getHolder().getSurface());
+            player.prepare();
+
+            holder2.videoView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                        toggleControlsVisibility();
+                    }
+                    return true;
+                }
+            });
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     private void setGameName(TextView textView, String text){
         textView.setText(text);
     }
@@ -396,6 +427,7 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
+
         if (player != null) {
             player.setSurface(surfaceHolder.getSurface());
             maybeStartPlayback();
@@ -404,7 +436,6 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
     }
 
     @Override
@@ -444,19 +475,13 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
     private void showControls() {
         mediaController.show(0);
-        //debugRootView.setVisibility(View.VISIBLE);
     }
 
     private void toggleControlsVisibility() {
         if (mediaController.isShowing()) {
             mediaController.hide();
-            //debugRootView.setVisibility(View.GONE);
         } else {
             mediaController.show(0);
         }
     }
-
-   /* public interface IVideoDisplay{
-        void showingItemPostion(int postion);
-    }*/
 }

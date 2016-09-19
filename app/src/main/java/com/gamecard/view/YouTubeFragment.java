@@ -1,20 +1,12 @@
 package com.gamecard.view;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.LabeledIntent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.graphics.Rect;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -54,22 +46,15 @@ public class YouTubeFragment extends Fragment {
     private static final int RECOVERY_DIALOG_REQUEST = 1;
     public static String DEVELOPER_KEY = "AIzaSyDm3UWKKI1H6Mqhu5O5_vfzI5mlTt1h6II";
 
-    String contentUri = "http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"
-            + "as=fmp4_audio_clear,fmp4_sd_hd_clear&sparams=ip,ipbits,expire,as&ip=0.0.0.0&ipbits=0&"
-            + "expire=19000000000&signature=7181C59D0252B285D593E1B61D985D5B7C98DE2A."
-            + "5B445837F55A40E0F28AACAA047982E372D177E2&key=ik0";
-
-    String contentId = "3aa39fa2cc27967f";
-
     String videoid;
     YouTubePlayerFragment playerFragment;
     CoordinatorLayout coordinatorLayout;
     PackageManager packageManager;
     List<String> sharePackageSet;
     private String mVideo_id;
-    private String mSource_dir;
+ //   private String mSource_dir;
     private String mPackage_name;
-    private CharSequence mLabel_name;
+//    private CharSequence mLabel_name;
     private FragmentActivity myContext;
     private VideoDisplayModel videoDisplayModel;
     private List<VideoDisplayModel> videoList;
@@ -131,9 +116,9 @@ public class YouTubeFragment extends Fragment {
         if (getArguments() != null) {
             mVideo_id = getArguments().getString(YOUTUBE_FULL_LINK);
             videoid = YoutubeIdConverter.getYoutubeVideoId(mVideo_id);
-            mSource_dir = getArguments().getString(SOURCE_DIR);
-            mLabel_name = getArguments().getCharSequence(LABEL_NAME);
             mPackage_name = getArguments().getString(PACKAGE_NAME);
+          /*  mSource_dir = getArguments().getString(SOURCE_DIR);
+            mLabel_name = getArguments().getCharSequence(LABEL_NAME);*/
         }
     }
 
@@ -146,33 +131,9 @@ public class YouTubeFragment extends Fragment {
         transaction.add(R.id.youtube_layout, youTubePlayerFragment).commit();*/
 
         final View view = inflater.inflate(R.layout.activity_video_display, container, false);
-        /*YouTubePlayerSupportFragment youTubePlayerFragment = YouTubePlayerSupportFragment.newInstance();
-        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        transaction.add(R.id.youtube_layout, youTubePlayerFragment).commit();*/
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(myContext,
                 LinearLayoutManager.VERTICAL, false);
-
-        final List<String> contentIdList = new ArrayList<>();
-        final List<String> contentUriList = new ArrayList<>();
-
-        contentIdList.add(0,"Continue Displaying");
-        contentIdList.add(contentId);
-        contentIdList.add(contentId);
-        contentIdList.add(contentId);
-        contentIdList.add(contentId);
-        contentIdList.add(contentId);
-        contentIdList.add(contentId);
-        contentIdList.add(contentId);
-
-        contentUriList.add(0,"Continue Displaying");
-        contentUriList.add(contentUri);
-        contentUriList.add(contentUri);
-        contentUriList.add(contentUri);
-        contentUriList.add(contentUri);
-        contentUriList.add(contentUri);
-        contentUriList.add(contentUri);
-        contentUriList.add(contentUri);
 
         userAgent= DemoUtil.getUserAgent(myContext);
         prepareExoPlayer();
@@ -192,7 +153,6 @@ public class YouTubeFragment extends Fragment {
                 videoList = videoResponseModel;
                 videoList.add(0, null);
                 adapter = new AdapterVideoDisplay(myContext,videoList,
-                        mSource_dir, mLabel_name, mPackage_name, contentIdList, contentUriList,
                         player, dashRendererBuilder, frameLayout);
                 recyclerView.setAdapter(adapter);
                 recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {

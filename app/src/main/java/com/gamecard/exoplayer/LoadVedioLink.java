@@ -1,5 +1,6 @@
 package com.gamecard.exoplayer;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -17,9 +18,15 @@ import java.net.URLDecoder;
 public class LoadVedioLink extends AsyncTask<String,Void,String> {
 
     private static final String TAG=LoadVedioLink.class.getSimpleName();
+    Context context;
+
+    public LoadVedioLink(Context context){
+        this.context = context;
+    }
 
     @Override
     protected String doInBackground(String... strings) {
+
         HttpURLConnection urlConnection=null;
         try {
             URL url = new URL("http://www.youtube.com/get_video_info?&video_id="+strings[0]);
