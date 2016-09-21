@@ -30,7 +30,7 @@ public class VideoDisplayViewHolder extends RecyclerView.ViewHolder {
         packageName = (TextView) view.findViewById(R.id.package_name);
        /* apkLink = (TextView) view.findViewById(R.id.apk_link);*/
         iconImage = (ImageView) view.findViewById(R.id.icon_image);
-        apkDownload = (ImageView) view.findViewById(R.id.apkDownload);
+        apkDownload = (ImageView) view.findViewById(R.id.apkDownload1);
 
     }
 }

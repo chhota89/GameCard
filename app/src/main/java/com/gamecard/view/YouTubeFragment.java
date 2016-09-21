@@ -39,7 +39,7 @@ public class YouTubeFragment extends Fragment {
 
 
     private static final String YOUTUBE_FULL_LINK = "YOUTUBE_FULL_LINK";
-    private static final String TAG = "AppDetailsActivity";
+    private static final String TAG = "YouTubeFragmentActivity";
     public static final String SOURCE_DIR = "SOURCE_DIR";
     public static final String LABEL_NAME = "LABEL_NAME";
     public static final String PACKAGE_NAME = "PACKAGE_NAME";
@@ -135,7 +135,7 @@ public class YouTubeFragment extends Fragment {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(myContext,
                 LinearLayoutManager.VERTICAL, false);
 
-        userAgent= DemoUtil.getUserAgent(myContext);
+        userAgent = DemoUtil.getUserAgent(myContext);
         prepareExoPlayer();
 
         //Initializing the RecyclerView
@@ -152,7 +152,7 @@ public class YouTubeFragment extends Fragment {
                 Log.i(TAG, "onResponseCalled: .........................................");
                 videoList = videoResponseModel;
                 videoList.add(0, null);
-                adapter = new AdapterVideoDisplay(myContext,videoList,
+                adapter = new AdapterVideoDisplay(myContext, mVideo_id, mPackage_name, videoList,
                         player, dashRendererBuilder, frameLayout);
                 recyclerView.setAdapter(adapter);
                 recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -176,15 +176,16 @@ public class YouTubeFragment extends Fragment {
 
 
                             if(rect.height()>lastRect.height()){
+
                                 if(positionToPlay != position){
-                                    vedioPlay=true;
-                                    positionToPlay=position;
+                                    vedioPlay = true;
+                                    positionToPlay = position;
                                     adapter.notifyItemChanged(position);
                                 }
                             }else
                             if(positionToPlay != lastPostion){
-                                vedioPlay=true;
-                                positionToPlay=lastPostion;
+                                vedioPlay = true;
+                                positionToPlay = lastPostion;
                                 adapter.notifyItemChanged(lastPostion);
                             }
 
@@ -259,7 +260,7 @@ public class YouTubeFragment extends Fragment {
 
                /* player = new DemoPlayer(new DashRendererBuilder(userAgent, contentUri.toString(), contentId,
                         new WidevineTestMediaDrmCallback(contentId)));*/
-            dashRendererBuilder=new DashRendererBuilder(userAgent);
+            dashRendererBuilder = new DashRendererBuilder(userAgent);
             player = new DemoPlayer(dashRendererBuilder);
             player.seekTo(playerPosition);
             playerNeedsPrepare = true;
@@ -276,8 +277,8 @@ public class YouTubeFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        positionToPlay=0;
-        vedioPlay=true;
+        positionToPlay = 0;
+        vedioPlay = true;
         releasePlayer();
     }
 
