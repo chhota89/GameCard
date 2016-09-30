@@ -35,14 +35,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class YouTubeFragment extends Fragment {
+public class VideoFragment extends Fragment {
 
 
     private static final String YOUTUBE_FULL_LINK = "YOUTUBE_FULL_LINK";
-    private static final String TAG = "YouTubeFragmentActivity";
+    private static final String URL_LIST = "URL_LIST";
+    private static final String TAG = "VideoFragmentActivity";
     public static final String SOURCE_DIR = "SOURCE_DIR";
     public static final String LABEL_NAME = "LABEL_NAME";
     public static final String PACKAGE_NAME = "PACKAGE_NAME";
+    public static final String GAME_TITLE = "GAME_TITLE";
+    public static final String ICON_LINK = "ICON_LINK";
     private static final int RECOVERY_DIALOG_REQUEST = 1;
     public static String DEVELOPER_KEY = "AIzaSyDm3UWKKI1H6Mqhu5O5_vfzI5mlTt1h6II";
 
@@ -51,10 +54,11 @@ public class YouTubeFragment extends Fragment {
     CoordinatorLayout coordinatorLayout;
     PackageManager packageManager;
     List<String> sharePackageSet;
+    private List<String> mUrlList;
     private String mVideo_id;
- //   private String mSource_dir;
-    private String mPackage_name;
-//    private CharSequence mLabel_name;
+ //  private String mSource_dir;
+    private String mPackage_name, mGameTitle, mIconLink;
+ //  private CharSequence mLabel_name;
     private FragmentActivity myContext;
     private VideoDisplayModel videoDisplayModel;
     private List<VideoDisplayModel> videoList;
@@ -76,7 +80,7 @@ public class YouTubeFragment extends Fragment {
     FrameLayout frameLayout;
 
 
-    public YouTubeFragment() {
+    public VideoFragment() {
         // Required empty public constructor
     }
 
@@ -85,17 +89,20 @@ public class YouTubeFragment extends Fragment {
      * this fragment using the provided parameters.
      *
      * @param param1 Parameter 1.
-     * @return A new instance of fragment YouTubeFragment.
+     * @return A new instance of fragment VideoFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static YouTubeFragment newInstance(String param1,String sourceDir,CharSequence labelName,
-                                              String packageName1) {
-        YouTubeFragment fragment = new YouTubeFragment();
+    public static VideoFragment newInstance(String param1, List<String> urlList, String sourceDir, CharSequence labelName,
+                                            String packageName1, String gameTitle, String iconLink) {
+        VideoFragment fragment = new VideoFragment();
         Bundle args = new Bundle();
         args.putString(YOUTUBE_FULL_LINK, param1);
+        args.putStringArrayList(URL_LIST, (ArrayList<String>) urlList);
         args.putString(SOURCE_DIR, sourceDir);
         args.putCharSequence(LABEL_NAME, labelName);
         args.putString(PACKAGE_NAME, packageName1);
+        args.putString(GAME_TITLE, gameTitle);
+        args.putString(ICON_LINK, iconLink);
         fragment.setArguments(args);
         return fragment;
     }
@@ -115,8 +122,11 @@ public class YouTubeFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mVideo_id = getArguments().getString(YOUTUBE_FULL_LINK);
+            mUrlList = getArguments().getStringArrayList(URL_LIST);
             videoid = YoutubeIdConverter.getYoutubeVideoId(mVideo_id);
             mPackage_name = getArguments().getString(PACKAGE_NAME);
+            mGameTitle = getArguments().getString(GAME_TITLE);
+            mIconLink = getArguments().getString(ICON_LINK);
           /*  mSource_dir = getArguments().getString(SOURCE_DIR);
             mLabel_name = getArguments().getCharSequence(LABEL_NAME);*/
         }
@@ -152,8 +162,8 @@ public class YouTubeFragment extends Fragment {
                 Log.i(TAG, "onResponseCalled: .........................................");
                 videoList = videoResponseModel;
                 videoList.add(0, null);
-                adapter = new AdapterVideoDisplay(myContext, mVideo_id, mPackage_name, videoList,
-                        player, dashRendererBuilder, frameLayout);
+                adapter = new AdapterVideoDisplay(myContext, mVideo_id, mGameTitle, mIconLink,
+                        videoList, player, mUrlList, dashRendererBuilder, frameLayout);
                 recyclerView.setAdapter(adapter);
                 recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
                     @Override

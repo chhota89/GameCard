@@ -13,6 +13,15 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
+    <GridView
+        android:id="@+id/bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numColumns="3"
+        app:behavior_hideable="true"
+        android:background="#dddddd"
+        app:layout_behavior="@string/bottom_sheet_behavior" />
+
     <include layout="@layout/material_design_floating_action_menu"/>
     <include layout="@layout/activity_download_view"/>
 </android.support.design.widget.CoordinatorLayout>

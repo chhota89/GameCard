@@ -20,7 +20,7 @@ import io.realm.RealmConfiguration;
 
 public class AppController extends Application {
 
-    private NetComponent mNetComponent, netComponent1;
+    private NetComponent mNetComponent;
 
     private MqttComponent mqttComponent;
 
@@ -40,12 +40,9 @@ public class AppController extends Application {
                 .appModule(new AppModule(this))
             //    .netModule(new NetModule("http://gamecarddemo.herokuapp.com/"))
 
-                .netModule(new NetModule("http://192.168.0.142:8080/GameCard/"))
-                .build();
+           //     .netModule(new NetModule("http://192.168.0.145:8080/GameCard/"))
 
-        netComponent1 = DaggerNetComponent.builder()
-                .appModule(new AppModule(this))
-                .netModule(new NetModule("http://192.168.0.132:8080/GameCard/"))
+                .netModule(new NetModule("https://bridgelabz-gemacenter.herokuapp.com"))
                 .build();
 
         mqttComponent= DaggerMqttComponent.builder()
@@ -56,10 +53,6 @@ public class AppController extends Application {
 
     public NetComponent getmNetComponent() {
         return mNetComponent;
-    }
-
-    public NetComponent getnetComponent1() {
-        return netComponent1;
     }
 
     public MqttComponent getMqttComponent() {

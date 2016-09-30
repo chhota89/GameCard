@@ -74,7 +74,6 @@ import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
-import org.eclipse.paho.client.mqttv3.MqttClient;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -374,8 +373,8 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                 Intent intent = new Intent(HomeView.this, AppDescriptionActivity.class);
                 if (gameList.get(position) instanceof ApplicationInfo) {
                     intent.putExtra("APPLICATION",  ((ApplicationInfo) gameList.get(position)).packageName);
-                    intent.putExtra(YouTubeFragment.LABEL_NAME,((ApplicationInfo) gameList.get(position)).loadLabel(getPackageManager()));
-                    intent.putExtra(YouTubeFragment.SOURCE_DIR,((ApplicationInfo) gameList.get(position)).sourceDir);
+                    intent.putExtra(VideoFragment.LABEL_NAME,((ApplicationInfo) gameList.get(position)).loadLabel(getPackageManager()));
+                    intent.putExtra(VideoFragment.SOURCE_DIR,((ApplicationInfo) gameList.get(position)).sourceDir);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         ImageView imageView1 = (ImageView) view.findViewById(R.id.appLogo);
                         /*ActivityOptionsCompat options = ActivityOptionsCompat.

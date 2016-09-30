@@ -36,7 +36,6 @@ public class RestCall {
 
     public RestCall(Context context){
         ((AppController)context.getApplicationContext()).getmNetComponent().inject(this);
-        ((AppController)context.getApplicationContext()).getnetComponent1().inject(this);
     }
 
   /*  public static void isGame(final ApplicationInfo applicationInfo, final CallbackGameChecker callbackGameChecker){
@@ -74,27 +73,6 @@ public class RestCall {
             }
         });
     }
-
-
-
-
-
-   /* public static class ApiClient {
-
-        public static final String BASE_URL = "http://localhost:8080/GameCard/";
-        private static Retrofit retrofit1 = null;
-
-
-        public static Retrofit getClient() {
-            if (retrofit1==null) {
-                retrofit1 = new Retrofit.Builder()
-                        .baseUrl(BASE_URL)
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build();
-            }
-            return retrofit1;
-        }
-    }*/
 
     public void getVideoDisplayList(String packageName, final CallbackRestResponse callback){
         GameResponseInterface listInterface1 = retrofit.create(GameResponseInterface.class);

@@ -11,6 +11,7 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -59,14 +60,14 @@ public class MqttController {
                         try {
                             realm.beginTransaction();
                             model = realm.createObjectFromJson(GameResponseModel.class, message);
+                            callback.onMessageRecive(model);
                         } catch (Exception exception) {
                             Log.e(TAG, "messageArrived: ", exception);
                         } finally {
                             realm.commitTransaction();
                         }
                         //model = realm.createObjectFromJson(GameResponseModel.class, message);
-                        model = JsonConvertor.getGameResponseFromJson(message);
-                        callback.onMessageRecive(model);
+                        //model = JsonConvertor.getGameResponseFromJson(message);
 
                     }
 
@@ -94,8 +95,11 @@ public class MqttController {
 
     public void connectToMqtt(final CallBackConnectMqtt callback) {
         IMqttToken token = null;
+        MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+        mqttConnectOptions.setUserName("lxakiriz");
+        mqttConnectOptions.setPassword("58IinVRYyVcJ".toCharArray());
         try {
-            token = client.connect();
+            token = client.connect(mqttConnectOptions);
         } catch (MqttException e) {
             e.printStackTrace();
         }

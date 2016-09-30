@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -24,7 +23,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -74,8 +72,8 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
         coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout) ;
 
       //  applicationInfo = getIntent().getParcelableExtra("APPLICATION");
-        sourceDir = getIntent().getStringExtra(YouTubeFragment.SOURCE_DIR);
-        loadLabel = getIntent().getStringExtra(YouTubeFragment.LABEL_NAME);
+        sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
+        loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
 
         progressDialog = new ProgressDialog(WiFiPeerList.this);
         progressDialog.setMessage("Searching ...");

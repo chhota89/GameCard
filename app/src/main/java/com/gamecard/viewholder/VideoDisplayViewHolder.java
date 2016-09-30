@@ -2,6 +2,7 @@ package com.gamecard.viewholder;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -19,7 +20,7 @@ public class VideoDisplayViewHolder extends RecyclerView.ViewHolder {
     public RelativeLayout videosLayout;
     public VideoSurfaceView videoView;
     public TextView gameTitle, packageName;
-    public ImageView iconImage, apkDownload;
+    public ImageView iconImage, apkDownload, like, comment;
 
     public VideoDisplayViewHolder(View view) {
         super(view);
@@ -31,6 +32,8 @@ public class VideoDisplayViewHolder extends RecyclerView.ViewHolder {
        /* apkLink = (TextView) view.findViewById(R.id.apk_link);*/
         iconImage = (ImageView) view.findViewById(R.id.icon_image);
         apkDownload = (ImageView) view.findViewById(R.id.apkDownload1);
+        like = (ImageView) view.findViewById(R.id.like);
+        comment = (ImageView) view.findViewById(R.id.comment);
 
     }
 }

@@ -15,8 +15,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -27,7 +27,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.MediaController;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,7 +41,8 @@ import com.gamecard.exoplayer.WidevineTestMediaDrmCallback;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.model.VideoDisplayModel;
 import com.gamecard.utility.DownloadService;
-import com.gamecard.view.YouTubeFragment;
+import com.gamecard.view.ImageFragment;
+import com.gamecard.view.VideoFragment;
 import com.gamecard.viewholder.GameInfoViewHoldr;
 import com.gamecard.viewholder.VideoDisplayViewHolder;
 import com.google.android.exoplayer.VideoSurfaceView;
@@ -61,56 +61,61 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
     private static final int VIDEO_TYPE = 0;
     private static final int VIDEO_DISPLAY_TYPE = 1;
+    private static final int IMAGE_TYPE = 2;
     private static boolean downloadStarted = false;
-    private static final String TAG = AdapterVideoDisplay.class.getSimpleName();
-    private List<VideoDisplayModel> videos2;
+  //  private static final String TAG = AdapterVideoDisplay.class.getSimpleName();
+    private List<VideoDisplayModel> mVideos;
     private GameResponseModel videos1;
-    private ImageView imageView1, imageView2;
-    private TextView packageName1, gameTitle1;
-    private Context context;
+ //   private CharSequence loadLabel;
+ //   private ProgressBar mProgress;
+ //   private TextView show, showPercentage;
+    private ImageView imageView1, imageView2, like2, comment2, mApkDownload, iconImage;
+    private TextView gameTitle, gameTitle1;
+    private Context mContext;
     private String inputTitle1, inputTitle, title, inputApk, apklink;
-    private CharSequence loadLabel;
     private static int progress;
-    private ProgressBar mProgress;
     public RelativeLayout videosLayout1;
-    private TextView show, showPercentage;
     private int id = 1, j;
     private String[] perms = {Manifest.permission_group.STORAGE};
     private int permsRequestCode = 200;
     private SharedPreferences sharedPreferences;
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mBuilder;
-    private DemoPlayer player;
+    private DemoPlayer mPlayer;
     private boolean autoPlay = true;
-    private MediaController mediaController;
+    private MediaController mMediaController;
     private boolean playerNeedsPrepare;
-    private VideoSurfaceView videoView, videoView1;
-    private DashRendererBuilder dashRendererBuilder;
-    FrameLayout frameLayout;
+    private VideoSurfaceView videoView, videoView1, videoView2;
+    private DashRendererBuilder mDashRendererBuilder;
+    FrameLayout mFrameLayout;
     String userAgent;
+    private List<String> mUrlList;
     private List<String> videoList1 , videoListLink, video_listId, video_listUrl;
     String[] strArray, strArray1;
-    private String video_id;
-    private String mPackage_name;
+    private String mVideo_id;
+    private String mGameTitle, mIconLink;
+    private boolean flag;
 
-    public AdapterVideoDisplay(Context context, String video_id, String mPackage_name,
-                               List<VideoDisplayModel> videos2, DemoPlayer player,
+    public AdapterVideoDisplay(Context context, String video_id, String game_title, String icon_link,
+                               List<VideoDisplayModel> videos2, DemoPlayer player, List<String> urlList,
                                DashRendererBuilder dashRendererBuilder, FrameLayout frameLayout){
 
-        this.context = context;
-        this.videos2 = videos2;
-        this.video_id = video_id;
-        this.mPackage_name = mPackage_name;
-        userAgent = DemoUtil.getUserAgent(context);
-        this.frameLayout = frameLayout;
-        this.player = player;
-        this.dashRendererBuilder = dashRendererBuilder;
-        mediaController = new MediaController(context);
+        this.mContext = context;
+        this.mVideo_id = video_id;
+        this.mGameTitle = game_title;
+        this.mIconLink = icon_link;
+        this.mVideos = videos2;
+        this.mPlayer = player;
+        this.mUrlList = urlList;
+        this.mDashRendererBuilder = dashRendererBuilder;
+        this.mFrameLayout = frameLayout;
 
+        userAgent = DemoUtil.getUserAgent(context);
+        mMediaController = new MediaController(context);
         try{
             player.addListener(this);
-            mediaController.setMediaPlayer(player.getPlayerControl());
-            mediaController.setEnabled(true);
+            mMediaController.setMediaPlayer(player.getPlayerControl());
+            mMediaController.setEnabled(true);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -119,7 +124,11 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     @Override
     public int getItemCount() {
 
-        return videos2.size();
+        if(mVideos.size() > 1) {
+            return mVideos.size();
+        } else {
+            return mUrlList.size();
+        }
     }
 
     @Override
@@ -127,7 +136,13 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
         switch(position) {
             case 0:
-                return VIDEO_TYPE;
+                if(mVideo_id != "") {
+                    return VIDEO_TYPE;
+                }
+            case 2:
+                if(mVideo_id == "" && position == 0){
+                    return IMAGE_TYPE;
+                }
             default:
                 return VIDEO_DISPLAY_TYPE;
         }
@@ -136,12 +151,17 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        LayoutInflater inflater = LayoutInflater.from(context);
+        LayoutInflater inflater = LayoutInflater.from(mContext);
 
         if (viewType == VIDEO_TYPE) {
 
             View viewUserInfo = inflater.inflate(R.layout.activity_show_video_details, parent, false);
             return new GameInfoViewHoldr(viewUserInfo);
+        }
+        else if(viewType == IMAGE_TYPE) {
+
+            View viewUserInfo = inflater.inflate(R.layout.fragment_image_layout, parent, false);
+            return new VideoDisplayViewHolder(viewUserInfo);
         }
         else {
             View viewUserInfo = inflater.inflate(R.layout.activity_show_video_details, parent, false);
@@ -155,45 +175,21 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
         try {
             if (holder.getItemViewType() == VIDEO_TYPE) {
 
-               /*
-                   Log.i(TAG, "VIDEO_TYPECalled: ....................................."+i);
-                GameInfoViewHoldr holder1 = (GameInfoViewHoldr) holder;
-                setGameName(holder1.appName,((GameResponseModel) videos1.get(position)).getGametittle());
-                Glide.with(context).load(((GameResponseModel) videos1.get(position)).getIconLink())
-                .into(holder1.appImage);*/
-/*
-                GameInfoViewHoldr holder1 = (GameInfoViewHoldr) holder;
-                setGameName(holder1.appName, videos1.get(position).getGametittle());
-                Glide.with(context).load(videos1.get(position).getIconLink()).into(holder1.appImage);*/
+                iconImage = (ImageView) holder.itemView.findViewById(R.id.icon_image);
+                gameTitle = (TextView) holder.itemView.findViewById(R.id.game_title);
+                mApkDownload = (ImageView) holder.itemView.findViewById(R.id.apkDownload1);
 
-               /* VideoDisplayViewHolder holder2 = (VideoDisplayViewHolder) holder;
-                setGameName(holder2.gameTitle, videos1.get(position).getGametittle());
-                Glide.with(context).load(videos1.get(position).getIconLink()).into(holder2.iconImage);*/
+                setGameName(gameTitle, mGameTitle);
+                Glide.with(mContext).load(mIconLink).into(iconImage);
 
-                imageView1 = (ImageView) holder.itemView.findViewById(R.id.icon_image);
-                imageView1.setVisibility(View.INVISIBLE);
-                gameTitle1 = (TextView) holder.itemView.findViewById(R.id.game_title);
-                gameTitle1.setVisibility(View.INVISIBLE);
-                imageView2 = (ImageView) holder.itemView.findViewById(R.id.apkDownload1);
-                imageView2.setVisibility(View.INVISIBLE);
-                packageName1 = (TextView) holder.itemView.findViewById(R.id.package_name);
+                mMediaController.hide();
+                final String video = mVideo_id;
 
-                try {
-                    setGameName(gameTitle1, videos1.getGametittle());
-                    Glide.with(context).load(videos1.getIconLink()).into(imageView1);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                setGameName(packageName1, mPackage_name);
-
-                mediaController.hide();
-                final String video = video_id;
                 strArray1 = new String[] {video};
                 video_listId = new LinkedList<>();
                 video_listUrl = new LinkedList<>();
 
-                new LoadVedioLink(context) {
+                new LoadVedioLink(mContext) {
                     @Override
                     protected void onPostExecute(String s1) {
                         super.onPostExecute(s1);
@@ -207,18 +203,28 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                         }
                     }
                 }.execute(strArray1);
-
+            }
+            else if(holder.getItemViewType() == IMAGE_TYPE) {
+               /* ImageFragment.newInstance(mUrlList.get(position)).onStart();
+                  mUrlList.add(0, ImageFragment.newInstance(mUrlList.get(position)).getString(0));
+                   //   Glide.with(mContext).load(mUrlList.get(0)).into(appImage);
+                }*/
+                final String pos = mUrlList.get(0);
+                ImageView appImage=(ImageView) holder.itemView.findViewById(R.id.appImage);
+                Glide.with(mContext).load(pos).into(appImage);
+                ImageFragment.newInstance(mUrlList.get(position));
             }
             else{
-                mediaController.hide();
+
+                mMediaController.hide();
                 VideoDisplayViewHolder holder2 = (VideoDisplayViewHolder) holder;
                 videoList1 = new LinkedList<String>();
                 videoListLink = new LinkedList<String>();
 
-                final String videoListId = videos2.get(position).getVedioLink();
+                final String videoListId = mVideos.get(position).getVedioLink();
                 strArray = new String[] {videoListId};
 
-                new LoadVedioLink(context) {
+                new LoadVedioLink(mContext) {
                     @Override
                     protected void onPostExecute(String s) {
                         super.onPostExecute(s);
@@ -248,19 +254,16 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                     }
                 }.execute(strArray);
 
-                setGameName(holder2.gameTitle, videos2.get(position).getGameTitle());
-
-                setGameName(holder2.packageName, videos2.get(position).getPackageName());
-
-                Glide.with(context).load(videos2.get(position).getIconLink()).into(holder2.iconImage);
+                setGameName(holder2.gameTitle, mVideos.get(position).getGameTitle());
+                Glide.with(mContext).load(mVideos.get(position).getIconLink()).into(holder2.iconImage);
 
                 holder2.apkDownload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         try {
-                            apklink = (String) videos2.get(position).getApkLink();
+                            apklink = (String) mVideos.get(position).getApkLink();
                             inputApk = apklink.replace(" ", "%20");
-                            title = videos2.get(position).getGameTitle();
+                            title = mVideos.get(position).getGameTitle();
                             inputTitle = title.replace(" ", "_");
                             inputTitle1 = inputTitle.trim();
                         } catch (Exception e){
@@ -281,10 +284,10 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                                 e.printStackTrace();
                             }
 
-                            final PendingIntent pIntent = PendingIntent.getActivity(context,
+                            final PendingIntent pIntent = PendingIntent.getActivity(mContext,
                                     (int) System.currentTimeMillis(), intent1, 0);
 
-                            Intent intent = new Intent(context, DownloadService.class);
+                            Intent intent = new Intent(mContext, DownloadService.class);
                             //* Send optional extras to Download IntentService *//
                             intent.putExtra("url", inputApk);
                             intent.putExtra("title", inputTitle1);
@@ -296,9 +299,9 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                                         case DownloadService.STATUS_RUNNING:
                                             downloadStarted = true;
 
-                                            mNotifyManager = (NotificationManager) context
+                                            mNotifyManager = (NotificationManager) mContext
                                                     .getSystemService(Context.NOTIFICATION_SERVICE);
-                                            mBuilder = new NotificationCompat.Builder(context);
+                                            mBuilder = new NotificationCompat.Builder(mContext);
                                             mBuilder.setContentTitle("Download")
                                                     .setContentText("Download in progress")
                                                     .setOngoing(true)
@@ -309,14 +312,14 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
                                             // Issues the notification
                                             mNotifyManager.notify(id, mBuilder.build());
-                                            Toast.makeText(context, "Download in PROGRESS...",
+                                            Toast.makeText(mContext, "Download in PROGRESS...",
                                                     Toast.LENGTH_LONG).show();
                                             break;
                                         case DownloadService.STATUS_FINISHED:
                                             //* Hide progress & extract result from bundle *//*
                                             mBuilder.addAction(0, " \t\t\t\t\t\t\t\t\t\t\t\t\t\t Install",
                                                     pIntent);
-                                            Toast.makeText(context, "Download Complete",
+                                            Toast.makeText(mContext, "Download Complete",
                                                     Toast.LENGTH_LONG).show();
 
                                             mBuilder.setContentText("Download Complete");
@@ -326,12 +329,12 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
                                             String results = resultData.getString("result");
                                             //* Update with result *//*
-                                            Toast.makeText(context, results, Toast.LENGTH_LONG).show();
+                                            Toast.makeText(mContext, results, Toast.LENGTH_LONG).show();
                                             break;
                                         case DownloadService.STATUS_ERROR:
                                             //* Handle the error *//*
                                             String error = resultData.getString(Intent.EXTRA_TEXT);
-                                            Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+                                            Toast.makeText(mContext, error, Toast.LENGTH_LONG).show();
                                             break;
                                         case DownloadService.UPDATE_PROGRESS:
 
@@ -348,7 +351,7 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                                                             + "/GameCenter/" + inputTitle1 + ".apk"),
                                                             "application/vnd.android.package-archive");
                                                     intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                    context.startActivity(intent1);
+                                                    mContext.startActivity(intent1);
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
                                                 }
@@ -360,30 +363,33 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
                                 try {
                                     if (Build.VERSION.SDK_INT >= 23) {
-                                        requestPermissions((Activity) context, perms, permsRequestCode);
+                                        requestPermissions((Activity) mContext, perms, permsRequestCode);
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
-                                context.startService(intent);
+                            mContext.startService(intent);
                                 if (downloadStarted) {
-                                    Toast.makeText(context, "PLEASE WAIT...", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(mContext, "PLEASE WAIT...", Toast.LENGTH_LONG).show();
                                 }
                         }else {
-                            Toast.makeText(context, "No sufficient memory for storing", Toast.LENGTH_LONG).show();
+                            Toast.makeText(mContext, "No sufficient memory for storing", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
 
                 final View v1 = holder2.apkDownload;
                 final View v2 = holder2.gameTitle;
-                final View v3 = holder2.packageName;
+                final View v3 = holder2.comment;
                 final View v4 = holder2.iconImage;
+                final View v5 = holder2.like;
 
-                if(v1.getVisibility() == View.VISIBLE && v2.getVisibility() == View.VISIBLE
-                        && v3.getVisibility() == View.VISIBLE && v4.getVisibility() == View.VISIBLE)
+
+              /*  if(v1.getVisibility() == View.VISIBLE && v2.getVisibility() == View.VISIBLE
+                        && v3.getVisibility() == View.VISIBLE && v4.getVisibility() == View.VISIBLE
+                        && v5.getVisibility() == View.VISIBLE)
                 {
-                    Animation out = AnimationUtils.makeOutAnimation(context,true);
+                    Animation out = AnimationUtils.makeOutAnimation(mContext,true);
                     v1.startAnimation(out);
                     v1.setVisibility(View.INVISIBLE);
 
@@ -395,25 +401,59 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
                     v4.startAnimation(out);
                     v4.setVisibility(View.INVISIBLE);
-                }
+
+                    v5.startAnimation(out);
+                    v5.setVisibility(View.INVISIBLE);
+                }*/
 
                 holder2.videosLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Animation in = AnimationUtils.loadAnimation(context, R.anim.fade_in);
+                        Animation in = AnimationUtils.loadAnimation(mContext, R.anim.fade_in);
+
                         v1.startAnimation(in);
-                        v1.setVisibility(View.VISIBLE);
+                      //  v1.setVisibility(View.VISIBLE);
 
                         v2.startAnimation(in);
-                        v2.setVisibility(View.VISIBLE);
+                      //  v2.setVisibility(View.VISIBLE);
 
                         v3.startAnimation(in);
-                        v3.setVisibility(View.VISIBLE);
+                      //  v3.setVisibility(View.VISIBLE);
 
                         v4.startAnimation(in);
-                        v4.setVisibility(View.VISIBLE);
+                      //  v4.setVisibility(View.VISIBLE);
+
+                        v5.startAnimation(in);
+                     //   v5.setVisibility(View.VISIBLE);
+
+                    //    flag = false;
                     }
                 });
+
+                holder2.videosLayout.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View view) {
+
+                            v5.clearAnimation();
+                            v4.clearAnimation();
+                            v3.clearAnimation();
+                            v2.clearAnimation();
+                            v1.clearAnimation();
+
+                        return true;
+                    }
+                }); /*{
+                    @Override
+                    public void onClick(View view) {
+                        if(flag == false){
+                            v5.clearAnimation();
+                            v4.clearAnimation();
+                            v3.clearAnimation();
+                            v2.clearAnimation();
+                            v1.clearAnimation();
+                        }
+                    }
+                });*/
             }
         } catch (Exception e){
             e.printStackTrace();
@@ -424,19 +464,19 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                            RecyclerView.ViewHolder holder, final int position){
         try{
 
-            YouTubeFragment.vedioPlay = false;
+            VideoFragment.vedioPlay = false;
 
             videoView1 = (VideoSurfaceView) holder.itemView.findViewById(R.id.video_display);
             videosLayout1 = (RelativeLayout) holder.itemView.findViewById(R.id.videos_layout);
 
-            dashRendererBuilder.setContentId(videoList1.get(position));
-            dashRendererBuilder.setUrl(videoListLink.get(position));
-            dashRendererBuilder.setMediaDrmCallback(new WidevineTestMediaDrmCallback(videoList1.get(position)));
+            mDashRendererBuilder.setContentId(videoList1.get(position));
+            mDashRendererBuilder.setUrl(videoListLink.get(position));
+            mDashRendererBuilder.setMediaDrmCallback(new WidevineTestMediaDrmCallback(videoList1.get(position)));
 
-            mediaController.setAnchorView(videosLayout1);
-            player.seekTo(0);
-            player.setSurface(videoView1.getHolder().getSurface());
-            player.prepare();
+            mMediaController.setAnchorView(videoView1);
+            mPlayer.seekTo(0);
+            mPlayer.setSurface(videoView1.getHolder().getSurface());
+            mPlayer.prepare();
 
             videoView1.setOnTouchListener(new View.OnTouchListener() {
                 @Override
@@ -458,18 +498,18 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
         try {
             VideoDisplayViewHolder holder2 = (VideoDisplayViewHolder) holder;
 
-            YouTubeFragment.vedioPlay = false;
+            VideoFragment.vedioPlay = false;
 
             this.videoView = holder2.videoView;
 
-            dashRendererBuilder.setContentId(videoList1.get(position));
-            dashRendererBuilder.setUrl(videoListLink.get(position));
-            dashRendererBuilder.setMediaDrmCallback(new WidevineTestMediaDrmCallback(videoList1.get(position)));
+            mDashRendererBuilder.setContentId(videoList1.get(position));
+            mDashRendererBuilder.setUrl(videoListLink.get(position));
+            mDashRendererBuilder.setMediaDrmCallback(new WidevineTestMediaDrmCallback(videoList1.get(position)));
 
-            mediaController.setAnchorView(holder2.videosLayout);
-            player.seekTo(0);
-            player.setSurface(holder2.videoView.getHolder().getSurface());
-            player.prepare();
+            mMediaController.setAnchorView(holder2.videoView);
+            mPlayer.seekTo(0);
+            mPlayer.setSurface(holder2.videoView.getHolder().getSurface());
+            mPlayer.prepare();
 
             holder2.videoView.setOnTouchListener(new View.OnTouchListener() {
                 @Override
@@ -514,8 +554,8 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
 
-        if (player != null) {
-            player.setSurface(surfaceHolder.getSurface());
+        if (mPlayer != null) {
+            mPlayer.setSurface(surfaceHolder.getSurface());
             maybeStartPlayback();
         }
     }
@@ -526,8 +566,8 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-        if (player != null) {
-            player.blockingClearSurface();
+        if (mPlayer != null) {
+            mPlayer.blockingClearSurface();
         }
     }
 
@@ -556,22 +596,30 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     }
 
     private void maybeStartPlayback() {
-        if (autoPlay && (player.getSurface().isValid()
-                || player.getSelectedTrackIndex(DemoPlayer.TYPE_VIDEO) == DemoPlayer.DISABLED_TRACK)) {
-            player.setPlayWhenReady(true);
+
+        if (autoPlay && (mPlayer.getSurface().isValid()
+                || mPlayer.getSelectedTrackIndex(DemoPlayer.TYPE_VIDEO) == DemoPlayer.DISABLED_TRACK)) {
+            mPlayer.setPlayWhenReady(true);
             autoPlay = false;
         }
     }
 
     private void showControls() {
-        mediaController.show(0);
+        mMediaController.show(0);
     }
 
     private void toggleControlsVisibility() {
-        if (mediaController.isShowing()) {
-            mediaController.hide();
+
+        if (mMediaController.isShowing()) {
+            mMediaController.hide();
         } else {
-            mediaController.show(0);
+            mMediaController.show(0);
         }
+    }
+
+    public void delete(int position) {
+        mUrlList.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, mUrlList.size());
     }
 }

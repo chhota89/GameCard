@@ -7,7 +7,7 @@
     android:screenOrientation="portrait"
     android:background="@color/black"
     android:paddingBottom="20dp"
-    tools:context="com.gamecard.view.YouTubeFragment">
+    tools:context="com.gamecard.view.VideoFragment">
     <FrameLayout
 
         android:id="@+id/youtube_layout"

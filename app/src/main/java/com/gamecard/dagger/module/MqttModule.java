@@ -19,7 +19,7 @@ import okhttp3.Cache;
 @Module
 public class MqttModule {
 
-    private static final String mqttServerPath = "tcp://52.66.142.120:1883";
+    private static final String mqttServerPath = "tcp://54.173.239.223:15691";
     private static final String CLIENT = MqttClient.generateClientId();
 
 

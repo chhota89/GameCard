@@ -61,6 +61,7 @@
         android:id="@+id/appRecycleView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingBottom="60dp"
         android:scrollbarAlwaysDrawVerticalTrack="true"
         app:layout_constraintLeft_toLeftOf="@+id/content_player_view"
         app:layout_constraintTop_toBottomOf="@+id/textView">

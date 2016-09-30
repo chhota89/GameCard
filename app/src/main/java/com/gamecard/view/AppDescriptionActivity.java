@@ -5,10 +5,10 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.ProgressDialog;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.NotificationCompat.Builder;
 import android.support.design.widget.Snackbar;
@@ -29,18 +30,28 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.gamecard.R;
+import com.gamecard.adapter.BottomSheetAdapter;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.model.VedioImageLinkModel;
 import com.gamecard.utility.DownloadService;
@@ -61,11 +72,16 @@ public class AppDescriptionActivity extends AppCompatActivity {
   //  private Context context;
     private NotificationManager mNotifyManager;
     private Builder mBuilder;
-    RelativeLayout mainLayout, downloadLayout;
+    RelativeLayout mainLayout, downloadLayout, mainLayout2;
     PackageManager packageManager;
     CoordinatorLayout coordinatorLayout1;
     List<String> sharePackageSet;
     String sourceDir, loadLabel;
+    private GridView bottomSheet;
+    private ArrayAdapter<Integer> bottomSheetAdapter;
+    private BottomSheetBehavior sheetBehavior;
+    private Integer[] bottomItems = {R.drawable.ic_send_black_48dp, R.drawable.ic_photo_library_black_48dp,
+    R.drawable.ic_download, R.drawable.ic_person_black_48dp};
     private static int progress;
     private ProgressBar mProgress;
     private TextView showPercentage;
@@ -73,7 +89,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
     //String extension;
     int id = 1;
     int value;
-    String apklink , inputApk, title, inputTitle, inputTitle1;
+    String apklink , inputApk, title, inputTitle, inputTitle1, mGameTitle, mIconLink;
     SharedPreferences sharedPreferences;
     ImageView bluetooth1,  wifi1, share1, open1, apkDownload1;
     private int percentProgress4 = 0;
@@ -93,8 +109,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
         viewPager=(ViewPager)findViewById(R.id.viewpager);
 
         //applicationInfo = getIntent().getParcelableExtra("APPLICATION");
-        sourceDir = getIntent().getStringExtra(YouTubeFragment.SOURCE_DIR);
-        loadLabel = getIntent().getStringExtra(YouTubeFragment.LABEL_NAME);
+        sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
+        loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
         packageName=getIntent().getStringExtra("APPLICATION");
 
         setUpViewPager(viewPager);
@@ -130,12 +146,22 @@ public class AppDescriptionActivity extends AppCompatActivity {
         share1 = (ImageView) findViewById(R.id.material_design_floating_action_share);
         open1 = (ImageView) findViewById(R.id.material_design_floating_action_open);
 
+      /*  fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                View root2 = View.inflate(AppDescriptionActivity.this,R.layout.fragment_image_layout,null);
+                ImageView image2 = (ImageView) root2.findViewById(R.id.appImage);
+                Animation in = AnimationUtils.loadAnimation(AppDescriptionActivity.this, R.anim.fade_out);
+                image2.startAnimation(in);
+            }
+        });*/
+
         bluetooth1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(AppDescriptionActivity.this,BluetoothPeerList.class);
-                intent.putExtra(YouTubeFragment.SOURCE_DIR, sourceDir);
-                intent.putExtra(YouTubeFragment.LABEL_NAME, loadLabel);
+                intent.putExtra(VideoFragment.SOURCE_DIR, sourceDir);
+                intent.putExtra(VideoFragment.LABEL_NAME, loadLabel);
                 startActivity(intent);
             }
         });
@@ -144,8 +170,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(AppDescriptionActivity.this,WiFiPeerList.class);
-                intent.putExtra(YouTubeFragment.SOURCE_DIR, sourceDir);
-                intent.putExtra(YouTubeFragment.LABEL_NAME, loadLabel);
+                intent.putExtra(VideoFragment.SOURCE_DIR, sourceDir);
+                intent.putExtra(VideoFragment.LABEL_NAME, loadLabel);
                 startActivity(intent);
             }
         });
@@ -153,7 +179,62 @@ public class AppDescriptionActivity extends AppCompatActivity {
         share1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                openShareOption();
+                mainLayout2 = (RelativeLayout) AppDescriptionActivity.this.findViewById(R.id.layout1);
+                mainLayout2.setVisibility(View.GONE);
+                //  openShareOption();
+
+                //set bottom sheet(GridView) adapter
+                bottomSheetAdapter = new BottomSheetAdapter(AppDescriptionActivity.this,
+                        R.layout.item_grid, bottomItems);
+
+                bottomSheet = (GridView) findViewById(R.id.bottom_sheet);
+                bottomSheet.setTranslationY(getStatusBarHeight());
+                bottomSheet.setAdapter(bottomSheetAdapter);
+                sheetBehavior = BottomSheetBehavior.from(bottomSheet);
+                sheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+                    boolean first = true;
+
+                    @Override
+                    public void onStateChanged(View bottomSheet, int newState) {
+                        Log.d("AppDescriptionActivity", "onStateChanged: " + newState);
+                    }
+
+                    @Override
+                    public void onSlide(View bottomSheet, float slideOffset) {
+                        Log.d("AppDescriptionActivity", "onSlide: ");
+                        if (first) {
+                            first = false;
+                            bottomSheet.setTranslationY(0);
+                        }
+                    }
+                });
+
+                sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+
+                //bottom sheet item click event
+                bottomSheet.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+                        if (position == 0) {
+                            Toast.makeText(getBaseContext(), "Send Clicked", Toast.LENGTH_SHORT).show();
+                         //   openShareOption();
+                            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                            sharingIntent.setType("text/plain");
+                            String shareBody = "Your body here";
+                            String shareSub = "Your subject here";
+                            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, shareSub);
+                            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+                            startActivity(Intent.createChooser(sharingIntent, "Share using"));
+
+                        } else if (position == 1) {
+                            Toast.makeText(getBaseContext(), "Search Clicked", Toast.LENGTH_SHORT).show();
+                        } else if (position == 2) {
+                            Toast.makeText(getBaseContext(), "Download Clicked", Toast.LENGTH_SHORT).show();
+                        } else if (position == 3) {
+                            Toast.makeText(getBaseContext(), "Contact Clicked", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
         });
 
@@ -164,6 +245,25 @@ public class AppDescriptionActivity extends AppCompatActivity {
             }
         });
     }
+
+    private int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
+
+  /*  @Override
+    public void onBackPressed() {
+        mainLayout2.setVisibility(View.VISIBLE);
+        if (sheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+            sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        } else {
+            super.onBackPressed();
+        }
+    }*/
 
     public boolean isOnline() {
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -225,6 +325,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
         GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo("packagename",packageName).findFirst();
         VedioImageLinkModel vedioImageLinkModel=new Gson().fromJson(realmResults.getJsonImageVedioLink(), VedioImageLinkModel.class);
         String vediolink=vedioImageLinkModel.getVedioLink();
+        mGameTitle = realmResults.getGametittle();
+        mIconLink = realmResults.getIconLink();
 
         try {
             apklink = vedioImageLinkModel.getApkLink();
@@ -404,13 +506,25 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            if(vedioPresent){
-                if(position==0){
-                    return YouTubeFragment.newInstance(vedioLink,sourceDir,loadLabel,packageName);
+
+           /* if(vedioLink == ""){
+                if(position == 0) {
+                    return ImageFragment.newInstance(urlList.get(position));
+                } else {
+                    return VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
+                            packageName, mGameTitle, mIconLink);
                 }
             }
-            return ImageFragment.newInstance(urlList.get(position));
-
+            if(vedioPresent){*/
+                if(position==0){
+                    return VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
+                            packageName, mGameTitle, mIconLink);
+                }
+          /*  }
+            if(vedioLink != null) {*/
+                return ImageFragment.newInstance(urlList.get(position));
+           /* }
+            return null;*/
         }
 
         @Override
@@ -423,7 +537,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
             this.urlList=urlList;
             this.vedioLink=vedioLink;
 
-            if(vedioLink!=null){
+            if(vedioLink != ""){
                 vedioPresent=true;
             }
         }
@@ -457,7 +571,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
             Intent sendIntent = new Intent(Intent.ACTION_SEND);
             sendIntent.setType("application/vnd.android.package-archive");
-            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(YouTubeFragment.SOURCE_DIR));
+            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(VideoFragment.SOURCE_DIR));
             PackageManager manager = getPackageManager();
             List<ResolveInfo> infos = manager.queryIntentActivities(sendIntent, 0);
             List<LabeledIntent> intentList = new ArrayList<LabeledIntent>();
@@ -469,7 +583,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
                     intent.setComponent(new ComponentName(resolveInfo.activityInfo.packageName,
                             resolveInfo.activityInfo.name));
                     intent.setAction(Intent.ACTION_SEND);
-                    intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(YouTubeFragment.SOURCE_DIR));
+                    intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(VideoFragment.SOURCE_DIR));
                     intentList.add(new LabeledIntent(intent, resolveInfo.activityInfo.packageName,
                             resolveInfo.loadLabel(manager), resolveInfo.icon));
                 }
@@ -494,7 +608,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
             Intent sendIntent = new Intent(Intent.ACTION_SEND);
             sendIntent.setType("application/vnd.android.package-archive");
-            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(YouTubeFragment.SOURCE_DIR));
+            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(VideoFragment.SOURCE_DIR));
             startActivity(Intent.createChooser(sendIntent,getResources().getString(R.string.share_chooser_text)));
 
         }
