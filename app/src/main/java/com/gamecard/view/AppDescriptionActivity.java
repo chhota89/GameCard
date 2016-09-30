@@ -45,6 +45,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -100,6 +101,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
     FloatingActionMenu fab;
     ViewPager viewPager;
     String packageName;
+    MediaController mMediaController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +114,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
         loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
         packageName=getIntent().getStringExtra("APPLICATION");
+
+        mMediaController = new MediaController(AppDescriptionActivity.this);
 
         setUpViewPager(viewPager);
 
@@ -130,11 +134,14 @@ public class AppDescriptionActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
 
+                if(mMediaController.isShowing()) {
+                    mMediaController.hide();
+                }
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {
-                Log.e(TAG,"onPageScrolledStateChanged called");
+             //   Log.e(TAG,"onPageScrolledStateChanged called");
             }
         });
 
@@ -331,8 +338,6 @@ public class AppDescriptionActivity extends AppCompatActivity {
         try {
             apklink = vedioImageLinkModel.getApkLink();
             inputApk = apklink.replace(" ", "%20");
-            Log.i(TAG, "apklink:.............." + apklink);
-            Log.i(TAG, "inputApk:.............." + inputApk);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -518,7 +523,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
             if(vedioPresent){*/
                 if(position==0){
                     return VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
-                            packageName, mGameTitle, mIconLink);
+                            packageName, mGameTitle, mIconLink, mMediaController);
                 }
           /*  }
             if(vedioLink != null) {*/
@@ -577,7 +582,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
             List<LabeledIntent> intentList = new ArrayList<LabeledIntent>();
 
             for (ResolveInfo resolveInfo : infos) {
-                Log.i(TAG, "openShareOption: .....  .... .... ... " + resolveInfo.activityInfo.packageName);
+          //      Log.i(TAG, "openShareOption: .....  .... .... ... " + resolveInfo.activityInfo.packageName);
                 if (sharePackageSet.contains(resolveInfo.activityInfo.packageName)) {
                     Intent intent = new Intent();
                     intent.setComponent(new ComponentName(resolveInfo.activityInfo.packageName,

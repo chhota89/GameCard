@@ -63,14 +63,11 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     private static final int VIDEO_DISPLAY_TYPE = 1;
     private static final int IMAGE_TYPE = 2;
     private static boolean downloadStarted = false;
-  //  private static final String TAG = AdapterVideoDisplay.class.getSimpleName();
+//    private static final String TAG = AdapterVideoDisplay.class.getSimpleName();
     private List<VideoDisplayModel> mVideos;
     private GameResponseModel videos1;
- //   private CharSequence loadLabel;
- //   private ProgressBar mProgress;
- //   private TextView show, showPercentage;
-    private ImageView imageView1, imageView2, like2, comment2, mApkDownload, iconImage;
-    private TextView gameTitle, gameTitle1;
+    private ImageView mApkDownload, iconImage;
+    private TextView gameTitle;
     private Context mContext;
     private String inputTitle1, inputTitle, title, inputApk, apklink;
     private static int progress;
@@ -94,11 +91,11 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     String[] strArray, strArray1;
     private String mVideo_id;
     private String mGameTitle, mIconLink;
-    private boolean flag;
 
     public AdapterVideoDisplay(Context context, String video_id, String game_title, String icon_link,
                                List<VideoDisplayModel> videos2, DemoPlayer player, List<String> urlList,
-                               DashRendererBuilder dashRendererBuilder, FrameLayout frameLayout){
+                               DashRendererBuilder dashRendererBuilder, FrameLayout frameLayout,
+                               MediaController mediaController){
 
         this.mContext = context;
         this.mVideo_id = video_id;
@@ -109,9 +106,10 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
         this.mUrlList = urlList;
         this.mDashRendererBuilder = dashRendererBuilder;
         this.mFrameLayout = frameLayout;
+        this.mMediaController = mediaController;
 
         userAgent = DemoUtil.getUserAgent(context);
-        mMediaController = new MediaController(context);
+    //    mMediaController = new MediaController(context);
         try{
             player.addListener(this);
             mMediaController.setMediaPlayer(player.getPlayerControl());
@@ -409,24 +407,13 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                 holder2.videosLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+
                         Animation in = AnimationUtils.loadAnimation(mContext, R.anim.fade_in);
-
                         v1.startAnimation(in);
-                      //  v1.setVisibility(View.VISIBLE);
-
                         v2.startAnimation(in);
-                      //  v2.setVisibility(View.VISIBLE);
-
                         v3.startAnimation(in);
-                      //  v3.setVisibility(View.VISIBLE);
-
                         v4.startAnimation(in);
-                      //  v4.setVisibility(View.VISIBLE);
-
                         v5.startAnimation(in);
-                     //   v5.setVisibility(View.VISIBLE);
-
-                    //    flag = false;
                     }
                 });
 
@@ -442,18 +429,7 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
 
                         return true;
                     }
-                }); /*{
-                    @Override
-                    public void onClick(View view) {
-                        if(flag == false){
-                            v5.clearAnimation();
-                            v4.clearAnimation();
-                            v3.clearAnimation();
-                            v2.clearAnimation();
-                            v1.clearAnimation();
-                        }
-                    }
-                });*/
+                });
             }
         } catch (Exception e){
             e.printStackTrace();
@@ -576,6 +552,12 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
         /*if (playbackState == com.google.android.exoplayer.ExoPlayer.STATE_ENDED) {
             showControls();
         }*/
+
+     /*   Log.i(TAG, "onStateChanged: ----------------------------------------");
+        if(videoView.getVisibility() == View.INVISIBLE) {
+            mMediaController.hide();
+        }*/
+
     }
 
     @Override

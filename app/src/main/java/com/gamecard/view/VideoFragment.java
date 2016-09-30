@@ -50,6 +50,7 @@ public class VideoFragment extends Fragment {
     public static String DEVELOPER_KEY = "AIzaSyDm3UWKKI1H6Mqhu5O5_vfzI5mlTt1h6II";
 
     String videoid;
+    static MediaController mMediaController;
     YouTubePlayerFragment playerFragment;
     CoordinatorLayout coordinatorLayout;
     PackageManager packageManager;
@@ -89,11 +90,13 @@ public class VideoFragment extends Fragment {
      * this fragment using the provided parameters.
      *
      * @param param1 Parameter 1.
+     * @param mediaController
      * @return A new instance of fragment VideoFragment.
      */
     // TODO: Rename and change types and number of parameters
     public static VideoFragment newInstance(String param1, List<String> urlList, String sourceDir, CharSequence labelName,
-                                            String packageName1, String gameTitle, String iconLink) {
+                                            String packageName1, String gameTitle, String iconLink,
+                                            MediaController mediaController) {
         VideoFragment fragment = new VideoFragment();
         Bundle args = new Bundle();
         args.putString(YOUTUBE_FULL_LINK, param1);
@@ -103,7 +106,9 @@ public class VideoFragment extends Fragment {
         args.putString(PACKAGE_NAME, packageName1);
         args.putString(GAME_TITLE, gameTitle);
         args.putString(ICON_LINK, iconLink);
+       // args.(mMediaController, mediaController);
         fragment.setArguments(args);
+        mMediaController = mediaController;
         return fragment;
     }
 
@@ -127,8 +132,6 @@ public class VideoFragment extends Fragment {
             mPackage_name = getArguments().getString(PACKAGE_NAME);
             mGameTitle = getArguments().getString(GAME_TITLE);
             mIconLink = getArguments().getString(ICON_LINK);
-          /*  mSource_dir = getArguments().getString(SOURCE_DIR);
-            mLabel_name = getArguments().getCharSequence(LABEL_NAME);*/
         }
     }
 
@@ -163,7 +166,7 @@ public class VideoFragment extends Fragment {
                 videoList = videoResponseModel;
                 videoList.add(0, null);
                 adapter = new AdapterVideoDisplay(myContext, mVideo_id, mGameTitle, mIconLink,
-                        videoList, player, mUrlList, dashRendererBuilder, frameLayout);
+                        videoList, player, mUrlList, dashRendererBuilder, frameLayout, mMediaController);
                 recyclerView.setAdapter(adapter);
                 recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
                     @Override
