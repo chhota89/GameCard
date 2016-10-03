@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -73,8 +72,8 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
         coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout);
 
      //   applicationInfo = getIntent().getParcelableExtra("APPLICATION");
-        sourceDir = getIntent().getStringExtra(YouTubeFragment.SOURCE_DIR);
-        loadLabel = getIntent().getStringExtra(YouTubeFragment.LABEL_NAME);
+        sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
+        loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
 
         deviceList=new ArrayList<>();
         recyclerView = (RecyclerView) findViewById(R.id.peerList);

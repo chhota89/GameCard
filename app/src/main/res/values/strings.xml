@@ -11,6 +11,8 @@
     <string name="uuid">a1eb25fe-b87b-4a11-9727-ac5c91ab5aef</string>
     <string name="permission_failure">Permission is Denided</string>
     <string name="turn_on_wifi">Turn on P2P setting.</string>
+    <string name="download_apk">Download</string>
+    <string name="percent">0 %</string>
 
     <string-array name="set_profile_menu">
         <item>Camera</item>

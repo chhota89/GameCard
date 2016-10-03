@@ -38,8 +38,11 @@ public class AppController extends Application {
 
         mNetComponent = DaggerNetComponent.builder()
                 .appModule(new AppModule(this))
-             //   .netModule(new NetModule("http://gamecarddemo.herokuapp.com/"))
-                .netModule(new NetModule("http://192.168.0.128:8080/GameCard/"))
+            //    .netModule(new NetModule("http://gamecarddemo.herokuapp.com/"))
+
+           //     .netModule(new NetModule("http://192.168.0.175:8080/GameCard/"))
+
+                .netModule(new NetModule("https://bridgelabz-gemacenter.herokuapp.com"))
                 .build();
 
         mqttComponent= DaggerMqttComponent.builder()
