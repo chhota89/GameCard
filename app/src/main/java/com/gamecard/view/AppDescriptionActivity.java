@@ -59,6 +59,7 @@ import com.gamecard.utility.DownloadService;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.gson.Gson;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,8 +82,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
     private GridView bottomSheet;
     private ArrayAdapter<Integer> bottomSheetAdapter;
     private BottomSheetBehavior sheetBehavior;
-    private Integer[] bottomItems = {R.drawable.ic_send_black_48dp, R.drawable.ic_photo_library_black_48dp,
-    R.drawable.ic_download, R.drawable.ic_person_black_48dp};
+    private Integer[] bottomItems = {R.drawable.ic_send_black_48dp};
     private static int progress;
     private ProgressBar mProgress;
     private TextView showPercentage;
@@ -186,8 +186,9 @@ public class AppDescriptionActivity extends AppCompatActivity {
         share1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainLayout2 = (RelativeLayout) AppDescriptionActivity.this.findViewById(R.id.layout1);
-                mainLayout2.setVisibility(View.GONE);
+                shareApplication();
+
+         /*       fab.setVisibility(View.INVISIBLE);
                 //  openShareOption();
 
                 //set bottom sheet(GridView) adapter
@@ -198,50 +199,33 @@ public class AppDescriptionActivity extends AppCompatActivity {
                 bottomSheet.setTranslationY(getStatusBarHeight());
                 bottomSheet.setAdapter(bottomSheetAdapter);
                 sheetBehavior = BottomSheetBehavior.from(bottomSheet);
+                sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                 sheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
                     boolean first = true;
 
                     @Override
                     public void onStateChanged(View bottomSheet, int newState) {
-                        Log.d("AppDescriptionActivity", "onStateChanged: " + newState);
+                      //  Log.d("AppDescriptionActivity", "onStateChanged: " + newState);
                     }
 
                     @Override
                     public void onSlide(View bottomSheet, float slideOffset) {
-                        Log.d("AppDescriptionActivity", "onSlide: ");
-                        if (first) {
+                     //   Log.d("AppDescriptionActivity", "onSlide: ");
+                        if (first == true) {
                             first = false;
                             bottomSheet.setTranslationY(0);
                         }
                     }
                 });
 
-                sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-
                 //bottom sheet item click event
                 bottomSheet.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-                        if (position == 0) {
-                            Toast.makeText(getBaseContext(), "Send Clicked", Toast.LENGTH_SHORT).show();
-                         //   openShareOption();
-                            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
-                            sharingIntent.setType("text/plain");
-                            String shareBody = "Your body here";
-                            String shareSub = "Your subject here";
-                            sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, shareSub);
-                            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-                            startActivity(Intent.createChooser(sharingIntent, "Share using"));
 
-                        } else if (position == 1) {
-                            Toast.makeText(getBaseContext(), "Search Clicked", Toast.LENGTH_SHORT).show();
-                        } else if (position == 2) {
-                            Toast.makeText(getBaseContext(), "Download Clicked", Toast.LENGTH_SHORT).show();
-                        } else if (position == 3) {
-                            Toast.makeText(getBaseContext(), "Contact Clicked", Toast.LENGTH_SHORT).show();
-                        }
+                        shareApplication();
                     }
-                });
+                });*/
             }
         });
 
@@ -262,10 +246,14 @@ public class AppDescriptionActivity extends AppCompatActivity {
         return result;
     }
 
-  /*  @Override
+ /*   @Override
     public void onBackPressed() {
-        mainLayout2.setVisibility(View.VISIBLE);
-        if (sheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+
+        if(fab.getVisibility() == View.INVISIBLE) {
+            fab.setVisibility(View.VISIBLE);
+        }
+        if (sheetBehavior != null &&
+                sheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         } else {
             super.onBackPressed();
@@ -512,24 +500,12 @@ public class AppDescriptionActivity extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
 
-           /* if(vedioLink == ""){
-                if(position == 0) {
-                    return ImageFragment.newInstance(urlList.get(position));
-                } else {
-                    return VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
-                            packageName, mGameTitle, mIconLink);
-                }
-            }
-            if(vedioPresent){*/
                 if(position==0){
                     return VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
                             packageName, mGameTitle, mIconLink, mMediaController);
                 }
-          /*  }
-            if(vedioLink != null) {*/
+
                 return ImageFragment.newInstance(urlList.get(position));
-           /* }
-            return null;*/
         }
 
         @Override
@@ -542,9 +518,9 @@ public class AppDescriptionActivity extends AppCompatActivity {
             this.urlList=urlList;
             this.vedioLink=vedioLink;
 
-            if(vedioLink != ""){
+         /*   if(vedioLink != ""){
                 vedioPresent=true;
-            }
+            }*/
         }
 
         @Override
@@ -617,5 +593,20 @@ public class AppDescriptionActivity extends AppCompatActivity {
             startActivity(Intent.createChooser(sendIntent,getResources().getString(R.string.share_chooser_text)));
 
         }
+    }
+
+    private void shareApplication() {
+        ApplicationInfo app = getApplicationContext().getApplicationInfo();
+        String filePath = app.sourceDir;
+
+        Intent intent = new Intent(Intent.ACTION_SEND);
+
+        // MIME of .apk is "application/vnd.android.package-archive".
+        // but Bluetooth does not accept this. Let's use "*/*" instead.
+        intent.setType("*/*");
+
+        // Append file and send Intent
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(filePath)));
+        startActivity(Intent.createChooser(intent, "Share app via"));
     }
 }

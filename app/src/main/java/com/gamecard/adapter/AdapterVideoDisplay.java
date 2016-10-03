@@ -16,7 +16,6 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -203,14 +202,12 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                 }.execute(strArray1);
             }
             else if(holder.getItemViewType() == IMAGE_TYPE) {
-               /* ImageFragment.newInstance(mUrlList.get(position)).onStart();
-                  mUrlList.add(0, ImageFragment.newInstance(mUrlList.get(position)).getString(0));
-                   //   Glide.with(mContext).load(mUrlList.get(0)).into(appImage);
-                }*/
+
                 final String pos = mUrlList.get(0);
                 ImageView appImage=(ImageView) holder.itemView.findViewById(R.id.appImage);
                 Glide.with(mContext).load(pos).into(appImage);
                 ImageFragment.newInstance(mUrlList.get(position));
+
             }
             else{
 
@@ -552,12 +549,6 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
         /*if (playbackState == com.google.android.exoplayer.ExoPlayer.STATE_ENDED) {
             showControls();
         }*/
-
-     /*   Log.i(TAG, "onStateChanged: ----------------------------------------");
-        if(videoView.getVisibility() == View.INVISIBLE) {
-            mMediaController.hide();
-        }*/
-
     }
 
     @Override
