@@ -130,6 +130,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 videoFragment.pausePlayer();
 
+
                 if(mMediaController.isShowing()) {
                     mMediaController.hide();
                 }
@@ -184,6 +185,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
             public void onClick(View view) {
               //  shareApplication();
                 openShareOption();
+
 
          /*       fab.setVisibility(View.INVISIBLE);
                 //  openShareOption();
