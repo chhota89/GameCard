@@ -144,7 +144,7 @@ public class VideoFragment extends Fragment {
 
             @Override
             public void onResponse(List<VideoDisplayModel> videoResponseModel) {
-                Log.i(TAG, "onResponseCalled: ........");
+                Log.i(TAG, "onResponseCalled:.");
                 videoList = videoResponseModel;
                 videoList.add(0, null);
                 adapter = new AdapterVideoDisplay(myContext, mVideo_id, mGameTitle, mIconLink,
@@ -160,7 +160,7 @@ public class VideoFragment extends Fragment {
                     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                         super.onScrollStateChanged(recyclerView, newState);
                         if(newState==RecyclerView.SCROLL_STATE_DRAGGING){
-                            Log.i(TAG, "onScrollStateChanged:scroll.......................... ");
+                            Log.i(TAG, "onScrollStateChanged:scroll ");
                             if(mMediaController.isShowing())
                                 mMediaController.hide();
 
@@ -189,8 +189,8 @@ public class VideoFragment extends Fragment {
                                 adapter.notifyItemChanged(lastPostion);
                             }
 
-                            Log.i(TAG, "onScrollStateChanged: rect ......  ....." + rect.height() + "  " + rect.width());
-                            Log.i(TAG, "onScrollStateChanged: rect ......  ....." + lastRect.height() + "  " + lastRect.width());
+                            Log.i(TAG, "onScrollStateChanged: rect " + rect.height() + "  " + rect.width());
+                            Log.i(TAG, "onScrollStateChanged: rect " + lastRect.height() + "  " + lastRect.width());
 
                         }
                     }
@@ -199,7 +199,7 @@ public class VideoFragment extends Fragment {
 
             @Override
             public void onError(Throwable throwable) {
-                Log.i(TAG, "onErrorCalled: .........");
+                Log.i(TAG, "onErrorCalled:");
             }
         });
 

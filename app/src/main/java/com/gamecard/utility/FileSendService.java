@@ -42,11 +42,11 @@ public class FileSendService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        port = ((Integer) intent.getExtras().get("port")).intValue();
-        File fileToSend = (File) intent.getExtras().get("fileToSend");
-        WifiP2pInfo wifiInfo = (WifiP2pInfo) intent.getExtras().get("wifiInfo");
-        resultReceiver = (ResultReceiver) intent.getExtras().get("resultReciver");
-        WifiP2pDevice p2pDevice = (WifiP2pDevice) intent.getExtras().get("wifip2pdevice");
+        port = ((Integer) intent.getExtras().get(Constant.PORT)).intValue();
+        File fileToSend = (File) intent.getExtras().get(Constant.FILE_TO_SEND);
+        WifiP2pInfo wifiInfo = (WifiP2pInfo) intent.getExtras().get(Constant.WI_FI_INFO);
+        resultReceiver = (ResultReceiver) intent.getExtras().get(Constant.RESULT_RECIVER);
+        WifiP2pDevice p2pDevice = (WifiP2pDevice) intent.getExtras().get(Constant.WIFI_P2P_DEVICE);
         try {
             socket.bind(null);
             socket.connect((new InetSocketAddress(wifiInfo.groupOwnerAddress, port)), 500);
@@ -102,7 +102,7 @@ public class FileSendService extends IntentService {
 
     public void sendPercentage(int percentage) {
         Bundle bundle = new Bundle();
-        bundle.putInt("Progress", percentage);
+        bundle.putInt(Constant.PROGRESS, percentage);
         resultReceiver.send(port, bundle);
     }
 
