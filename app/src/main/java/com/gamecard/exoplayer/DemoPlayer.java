@@ -323,6 +323,9 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
     player.release();
   }
 
+  public void stopDemoPlayer(){
+    player.stop();
+  }
 
   public int getPlaybackState() {
     if (rendererBuildingState == RENDERER_BUILDING_STATE_BUILDING) {

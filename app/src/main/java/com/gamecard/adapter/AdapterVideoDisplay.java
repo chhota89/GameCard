@@ -1,6 +1,8 @@
 package com.gamecard.adapter;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -148,25 +150,28 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                 setGameName(gameTitle, mGameTitle);
                 Glide.with(mContext).load(mIconLink).into(iconImage);
                 mMediaController.hide();
-                final String video = mVideo_id;
 
-                strArray1 = new String[] {video};
                 video_listId = new LinkedList<>();
                 video_listUrl = new LinkedList<>();
 
-                new LoadVedioLink(mContext) {
+                LoadVedioLink loadVedioLink1 = new LoadVedioLink(mContext) {
                     @Override
-                    protected void onPostExecute(String s1) {
-                        super.onPostExecute(s1);
-                        if(s1 != null) {
-                            video_listId.add(video);
-                            video_listUrl.add(s1);
+                    protected void onPostExecute(String videoUrl) {
+                        super.onPostExecute(videoUrl);
+                        if(videoUrl != null) {
+                            video_listId.add(mVideo_id);
+                            video_listUrl.add(videoUrl);
                             if(video_listUrl != null){
                                 loadVideo(video_listId, video_listUrl, holder, position);
                             }
                         }
                     }
-                }.execute(strArray1);
+                };
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2){
+                    loadVedioLink1.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mVideo_id);
+                }else{
+                    loadVedioLink1.execute(mVideo_id);
+                }
             }
             else if(holder.getItemViewType() == IMAGE_TYPE) {
 
@@ -181,14 +186,13 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                 videoList1 = new LinkedList<String>();
                 videoListLink = new LinkedList<String>();
 
-                final String videoListId = mVideos.get(position).getVedioLink();
-                strArray = new String[] {videoListId};
+                final String videoId = mVideos.get(position).getVedioLink();
 
-                new LoadVedioLink(mContext) {
+                LoadVedioLink loadVedioLink = new LoadVedioLink(mContext) {
                     @Override
-                    protected void onPostExecute(String s) {
-                        super.onPostExecute(s);
-                        if(s != null) {
+                    protected void onPostExecute(String videoLink) {
+                        super.onPostExecute(videoLink);
+                        if(videoLink != null) {
                             int i = 0;
                             try {
                                 j = position;
@@ -197,8 +201,8 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                                     videoListLink.add(0, "Continue Displaying");
                                     i++;
                                 }
-                                videoList1.add(j, videoListId);
-                                videoListLink.add(j, s);
+                                videoList1.add(j, videoId);
+                                videoListLink.add(j, videoLink);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -207,7 +211,12 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                             }
                         }
                     }
-                }.execute(strArray);
+                };
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2){
+                    loadVedioLink.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, videoId);
+                }else{
+                    loadVedioLink.execute(videoId);
+                }
 
                 setGameName(holder2.gameTitle, mVideos.get(position).getGameTitle());
                 Glide.with(mContext).load(mVideos.get(position).getIconLink()).into(holder2.iconImage);
@@ -227,7 +236,11 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                         }
 
                         AppDescriptionActivity activity = new AppDescriptionActivity();
-                        activity.performDownloads(inputApk, inputTitle1);
+                        try {
+                            activity.performDownloads(inputApk, inputTitle1);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
 

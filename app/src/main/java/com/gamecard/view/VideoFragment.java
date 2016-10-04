@@ -57,7 +57,6 @@ public class VideoFragment extends Fragment {
     RecyclerView recyclerView;
     private AdapterVideoDisplay adapter;
     private DemoPlayer player;
-    private MediaController mediaController;
     private long playerPosition;
     private EventLogger eventLogger;
     private boolean playerNeedsPrepare;
@@ -94,7 +93,7 @@ public class VideoFragment extends Fragment {
         args.putString(PACKAGE_NAME, packageName1);
         args.putString(GAME_TITLE, gameTitle);
         args.putString(ICON_LINK, iconLink);
-        // args.(mMediaController, mediaController);
+
         fragment.setArguments(args);
         mMediaController = mediaController;
         return fragment;
@@ -160,6 +159,12 @@ public class VideoFragment extends Fragment {
                     @Override
                     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                         super.onScrollStateChanged(recyclerView, newState);
+                        if(newState==RecyclerView.SCROLL_STATE_DRAGGING){
+                            Log.i(TAG, "onScrollStateChanged:scroll.......................... ");
+                            if(mMediaController.isShowing())
+                                mMediaController.hide();
+
+                        }
                         if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                             //Call your method here for next set of data
                             int position = linearLayoutManager.findFirstVisibleItemPosition();
@@ -232,12 +237,16 @@ public class VideoFragment extends Fragment {
         releasePlayer();
     }
 
+    public void pausePlayer(){
+        player.stopDemoPlayer();
+    }
+
     private void releasePlayer() {
         if (player != null) {
             playerPosition = player.getCurrentPosition();
             player.release();
             player = null;
-            eventLogger.endSession();
+            //eventLogger.endSession();
             eventLogger = null;
         }
     }

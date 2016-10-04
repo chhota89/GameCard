@@ -89,6 +89,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     ImageView bluetooth1,  wifi1, share1, open1, apkDownload1;
     private int percentProgress4 = 0;
+    VideoFragment videoFragment;
 
     Realm realm;
     ViewPageAdapter viewPageAdapter;
@@ -127,6 +128,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
             @Override
             public void onPageSelected(int position) {
+                videoFragment.pausePlayer();
 
                 if(mMediaController.isShowing()) {
                     mMediaController.hide();
@@ -180,7 +182,8 @@ public class AppDescriptionActivity extends AppCompatActivity {
         share1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                shareApplication();
+              //  shareApplication();
+                openShareOption();
 
          /*       fab.setVisibility(View.INVISIBLE);
                 //  openShareOption();
@@ -289,7 +292,11 @@ public class AppDescriptionActivity extends AppCompatActivity {
             apkDownload1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                   performDownloads(inputApk, inputTitle1);
+                    try {
+                        performDownloads(inputApk, inputTitle1);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             });
         }else {
@@ -496,8 +503,9 @@ public class AppDescriptionActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
 
                 if(position==0){
-                    return VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
+                   videoFragment=VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
                             packageName, mGameTitle, mIconLink, mMediaController);
+                    return  videoFragment;
                 }
 
                 return ImageFragment.newInstance(urlList.get(position));
