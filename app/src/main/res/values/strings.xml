@@ -25,9 +25,15 @@
         <item>com.lenovo.anyshare.gps</item>
     </string-array>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="share_chooser_text">Send apk using</string>
     <string name="no_send_app_found">No application found to send apk.</string>
+    <string name="sending">Sending ...</string>
+    <string name="turn_on">Turn on</string>
+    <string name="reciver_started">Recive file</string>
+    <string name="bluethooth_not_supported">Bluetooth is not supported in this device</string>
+    <string name="turn_on_bluethooth">Turn on Bluetooth</string>
+    <string name="continue_playing">Continue playing</string>
+    <string name="suggestion">Suggestion</string>
 
 </resources>

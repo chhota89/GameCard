@@ -33,6 +33,7 @@ import com.gamecard.R;
 import com.gamecard.adapter.AdapterPeerList;
 import com.gamecard.callback.CallBackWifiBroadcast;
 import com.gamecard.callback.ClickListener;
+import com.gamecard.utility.Constant;
 import com.gamecard.utility.FileSendService;
 import com.gamecard.utility.WiFiFileReceiver;
 import com.gamecard.utility.RecyclerTouchListner;
@@ -239,17 +240,17 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
 
         if (wifiP2pInfo != null && wifiP2pInfo.groupFormed) {
             Intent fileSendService = new Intent(this, FileSendService.class);
-            fileSendService.putExtra("fileToSend", appsDir);
-            fileSendService.putExtra("port", new Integer(PORT));
-            fileSendService.putExtra("wifiInfo", wifiP2pInfo);
-            fileSendService.putExtra("wifip2pdevice", device);
-            fileSendService.putExtra("resultReciver", new ResultReceiver(new Handler()) {
+            fileSendService.putExtra(Constant.FILE_TO_SEND, appsDir);
+            fileSendService.putExtra(Constant.PORT, new Integer(PORT));
+            fileSendService.putExtra(Constant.WI_FI_INFO, wifiP2pInfo);
+            fileSendService.putExtra(Constant.WIFI_P2P_DEVICE, device);
+            fileSendService.putExtra(Constant.RESULT_RECIVER, new ResultReceiver(new Handler()) {
                 @Override
                 protected void onReceiveResult(int resultCode, final Bundle resultData) {
                     if (resultCode == PORT) {
                         if (mProgressDialog != null) {
 
-                            int percentage = resultData.getInt("Progress", 0);
+                            int percentage = resultData.getInt(Constant.PROGRESS, 0);
                             mProgressDialog.setProgress(percentage);
 
                             if (percentage == 100) {
@@ -260,7 +261,7 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
                         else{
                             //Initialize the progress dialog
                             mProgressDialog = new ProgressDialog(WiFiPeerList.this);
-                            mProgressDialog.setMessage("Sending ..... "+loadLabel);
+                            mProgressDialog.setMessage(getResources().getString(R.string.sending)+loadLabel);
                             mProgressDialog.setIndeterminate(false);
                             mProgressDialog.setMax(100);
                             mProgressDialog.setProgressNumberFormat(null);
