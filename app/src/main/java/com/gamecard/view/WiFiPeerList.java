@@ -214,7 +214,7 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
     }
 
     public void searchPerer() {
-        if(wifiIsOn){
+
             //start searching for peers
             progressDialog.show();
             manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
@@ -231,7 +231,6 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
                             Toast.LENGTH_SHORT).show();
                 }
             });
-        }
     }
 
     public void sendFile(View view) {
