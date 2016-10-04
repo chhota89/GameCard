@@ -55,6 +55,7 @@ import com.gamecard.R;
 import com.gamecard.adapter.BottomSheetAdapter;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.model.VedioImageLinkModel;
+import com.gamecard.utility.Constant;
 import com.gamecard.utility.DownloadService;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.gson.Gson;
@@ -108,7 +109,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
         //applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
         loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
-        packageName=getIntent().getStringExtra("APPLICATION");
+        packageName=getIntent().getStringExtra(Constant.APPLICATION);
 
         mMediaController = new MediaController(AppDescriptionActivity.this);
 
@@ -262,7 +263,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
     private void setUpViewPager(ViewPager viewPager) {
         viewPageAdapter=new ViewPageAdapter(getSupportFragmentManager());
 
-        GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo("packagename",packageName).findFirst();
+        GameResponseModel realmResults = realm.where(GameResponseModel.class).equalTo(Constant.PACKAGE_NAME,packageName).findFirst();
         VedioImageLinkModel vedioImageLinkModel=new Gson().fromJson(realmResults.getJsonImageVedioLink(), VedioImageLinkModel.class);
         String vediolink=vedioImageLinkModel.getVedioLink();
         mGameTitle = realmResults.getGametittle();

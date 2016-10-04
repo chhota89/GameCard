@@ -62,6 +62,7 @@ import com.gamecard.utility.AppController;
 import com.gamecard.utility.BluethoothFileReciver;
 import com.gamecard.utility.BluetoothBroadcastReceiver;
 import com.gamecard.utility.CircleTransformation;
+import com.gamecard.utility.Constant;
 import com.gamecard.utility.EditSharedPrefrence;
 import com.gamecard.utility.FacebookUtility;
 import com.gamecard.utility.LoadDbAsync;
@@ -85,6 +86,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast, WifiP2pManager.PeerListListener, CallBackBluetooth {
@@ -123,6 +125,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     Uri outPutUri = null;
     BluetoothAdapter mBluetoothAdapter;
     CollapsingToolbarLayout collapsingToolbarLayout;
+    AppBarLayout appBarLayout;
     private BluetoothBroadcastReceiver bluetoothBroadcastReceiver;
     private Realm realm;
     List<Object> gameList;
@@ -130,6 +133,9 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     Map<String, ApplicationInfo> applicationInfoMap;
     List<String> packageList;
     RealmResults<GameResponseModel> suggestion;
+    RealmChangeListener realmChangeListener;
+    RecyclerView recyclerView;
+
     boolean suggestionFlag=false;
 
     @Override
@@ -138,25 +144,117 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         supportRequestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
         setContentView(R.layout.activity_home_view);
 
-        //collapsingToolbarLayout.setBackground(getResources().getDrawable(R.drawable.background));
-        realm = Realm.getInstance(HomeView.this);
+        //Initialize all view
+        initView();
 
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        //Register broadcast receiver and Initialize relam
+        initComponent();
 
-        bluetoothIntent.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        //Set listener for view
+        setListnerForView();
 
-        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = manager.initialize(this, getMainLooper(), null);
+        //set Profile picture
+        setProfilePicture();
 
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        gameList = new ArrayList<>();
+        gameList.add(0, getResources().getString(R.string.continue_playing));
+        adapterDisplayApp = new AdapterDisplayApp(gameList, HomeView.this);
 
+        // Load data from local database.
+        new LoadDbAsync(HomeView.this){
+            @Override
+            protected void onPostExecute(Map<String, Object> responseMap) {
+                super.onPostExecute(responseMap);
+                List<ApplicationInfo> gameLisDisplay= (List<ApplicationInfo>) responseMap.get(HomeView.GAME_LIST);
+                gameList.addAll(gameLisDisplay);
+
+                suggestion=getSuggestionList();
+                if(suggestion.size()!=0) {
+                    gameList.add(getString(R.string.suggestion));
+                    gameList.addAll(suggestion);
+                }
+                /*realmChangeListener=new RealmChangeListener() {
+                    boolean suggestionFlag=false;
+                    @Override
+                    public void onChange() {
+                        if(suggestion!=null && suggestion.size()!=0){
+                            if(!suggestionFlag)
+                                gameList.add("Suggestion");
+                            suggestionFlag=true;
+                            gameList.addAll(suggestion);
+                            adapterDisplayApp.notifyDataSetChanged();
+                        }
+                    }
+                };
+                suggestion.addChangeListener(realmChangeListener);*/
+
+                adapterDisplayApp.notifyDataSetChanged();
+                applicationInfoMap= (Map<String, ApplicationInfo>) responseMap.get(HomeView.APPLICATION_INFO_MAP);
+                //check for new application is install or not
+                packageList=(List<String>) responseMap.get(HomeView.NEW_PACKAGE_LIST);
+                if(packageList.size()!=0) {
+                    loadDataFromRest();
+                }
+
+            }
+        }.execute();
+
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
+        DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
+        defaultItemAnimator.setAddDuration(1000);
+        defaultItemAnimator.setRemoveDuration(1000);
+        recyclerView.setItemAnimator(defaultItemAnimator);
+        recyclerView.setAdapter(adapterDisplayApp);
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListner(getApplicationContext(), recyclerView, new ClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                Intent intent = new Intent(HomeView.this, AppDescriptionActivity.class);
+                if (gameList.get(position) instanceof ApplicationInfo) {
+                    intent.putExtra(Constant.APPLICATION,  ((ApplicationInfo) gameList.get(position)).packageName);
+                    intent.putExtra(VideoFragment.LABEL_NAME,((ApplicationInfo) gameList.get(position)).loadLabel(getPackageManager()));
+                    intent.putExtra(VideoFragment.SOURCE_DIR,((ApplicationInfo) gameList.get(position)).sourceDir);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        ImageView imageView1 = (ImageView) view.findViewById(R.id.appLogo);
+                        /*ActivityOptionsCompat options = ActivityOptionsCompat.
+                                makeSceneTransitionAnimation(HomeView.this, imageView1, imageView1.getTransitionName());*/
+                        startActivity(intent/*, options.toBundle()*/);
+                    } else {
+                        startActivity(intent);
+                    }
+                }
+                if(gameList.get(position) instanceof GameResponseModel){
+                    intent.putExtra("APPLICATION",((GameResponseModel) gameList.get(position)).getPackagename());
+                    startActivity(intent);
+                }
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+            }
+        }));
+    }
+
+    private void initView(){
         userName = (TextView) findViewById(R.id.userName);
         imageView = (ImageView) findViewById(R.id.profilePic);
-        facebookLogin = getIntent().getBooleanExtra("Facebook_Login", false);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.empty);
+        setSupportActionBar(toolbar);
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapse_toolbar);
+        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
+        receiveFile = (TextView) findViewById(R.id.reciveFile);
+        bluetoothSwitch = (SwitchButton) findViewById(R.id.bluetooth);
+        appBarLayout = (AppBarLayout) findViewById(R.id.appBarLayout);
+        recyclerView = (RecyclerView) findViewById(R.id.appRecycleView);
 
+    }
+
+    public RealmResults<GameResponseModel> getSuggestionList() {
+        return realm.where(GameResponseModel.class).equalTo("suggestion", true).findAll();
+    }
+
+    private void setListnerForView(){
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -164,52 +262,35 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             }
         });
 
-        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> services = activityManager.getRunningServices(Integer.MAX_VALUE);
 
-        for (ActivityManager.RunningServiceInfo info : services) {
-            //cal.setTimeInMillis(currentMillis-info.activeSince);
-            long timing = System.currentTimeMillis() - info.activeSince;
-            Log.i(TAG, "onCreate: " + info.process + "    " + timing);
-        }
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle(R.string.empty);
-        setSupportActionBar(toolbar);
-
-        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapse_toolbar);
-
-        //setting background for collapsing toolbar
-        Picasso.with(HomeView.this).load(R.drawable.background).into(new Target(){
+        //Hiding the toolbar text when collapsing is expanded
+        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            boolean isShow = false;
+            int scrollRange = -1;
 
             @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                collapsingToolbarLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
-            }
-
-            @Override
-            public void onBitmapFailed(final Drawable errorDrawable) {
-                Log.d("TAG", "FAILED");
-            }
-
-            @Override
-            public void onPrepareLoad(final Drawable placeHolderDrawable) {
-                Log.d("TAG", "Prepare Load");
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (scrollRange == -1) {
+                    scrollRange = appBarLayout.getTotalScrollRange();
+                }
+                if (scrollRange + verticalOffset == 0) {
+                    collapsingToolbarLayout.setTitle("Title");
+                    isShow = true;
+                } else if (isShow) {
+                    collapsingToolbarLayout.setTitle(getString(R.string.empty));
+                    isShow = false;
+                }
             }
         });
 
-
         toolbarTextAppernce();
-        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
-        receiveFile = (TextView) findViewById(R.id.reciveFile);
-        bluetoothSwitch = (SwitchButton) findViewById(R.id.bluetooth);
         bluetoothSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     if (mBluetoothAdapter == null) {
                         // Device does not support Bluetooth
-                        Snackbar.make(coordinatorLayout, "This device is not support Bluetooth", Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(coordinatorLayout, getString(R.string.bluethooth_not_supported), Snackbar.LENGTH_LONG).show();
                     } else {
                         //Device has bluetooth
                         if (!mBluetoothAdapter.isEnabled()) {
@@ -241,7 +322,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     if (wifiOn) {
-                        receiveFile.setText("Receiver started");
+                        receiveFile.setText(getString(R.string.reciver_started));
                         Snackbar.make(coordinatorLayout, "Receiver started.", Snackbar.LENGTH_LONG)
                                 .setAction("UNDO", new View.OnClickListener() {
                                     @Override
@@ -261,30 +342,43 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                 }
             }
         });
+    }
 
-        //Hiding the toolbar text when collapsing is expanded
-        final CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapse_toolbar);
-        AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.appBarLayout);
-        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-            boolean isShow = false;
-            int scrollRange = -1;
+    private void initComponent(){
+        realm = Realm.getInstance(HomeView.this);
+
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        bluetoothIntent.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        channel = manager.initialize(this, getMainLooper(), null);
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    }
+
+    private void setProfilePicture(){
+        //setting background for collapsing toolbar
+        Picasso.with(HomeView.this).load(R.drawable.background).into(new Target(){
 
             @Override
-            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-                if (scrollRange == -1) {
-                    scrollRange = appBarLayout.getTotalScrollRange();
-                }
-                if (scrollRange + verticalOffset == 0) {
-                    collapsingToolbarLayout.setTitle("Title");
-                    isShow = true;
-                } else if (isShow) {
-                    collapsingToolbarLayout.setTitle(getString(R.string.empty));
-                    isShow = false;
-                }
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                collapsingToolbarLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
+            }
+
+            @Override
+            public void onBitmapFailed(final Drawable errorDrawable) {
+                Log.d("TAG", "FAILED");
+            }
+
+            @Override
+            public void onPrepareLoad(final Drawable placeHolderDrawable) {
+                Log.d("TAG", "Prepare Load");
             }
         });
 
 
+        facebookLogin = getIntent().getBooleanExtra("Facebook_Login", false);
         if (facebookLogin) {
             //Loading Profile picture
             String userId = AccessToken.getCurrentAccessToken().getUserId();
@@ -316,84 +410,6 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                 Picasso.with(HomeView.this).load(profileUri).transform(new CircleTransformation()).into(imageView);
         }
 
-        gameList = new ArrayList<>();
-        gameList.add(0, "Continue Playing");
-        adapterDisplayApp = new AdapterDisplayApp(gameList, HomeView.this);
-
-        // Load data from local database.
-        new LoadDbAsync(HomeView.this){
-            @Override
-            protected void onPostExecute(Map<String, Object> responseMap) {
-                super.onPostExecute(responseMap);
-                List<ApplicationInfo> gameLisDisplay= (List<ApplicationInfo>) responseMap.get(HomeView.GAME_LIST);
-                gameList.addAll(gameLisDisplay);
-
-                suggestion=realm.where(GameResponseModel.class).equalTo("suggestion",true).findAll();
-                if(suggestion.size()!=0) {
-                    gameList.add("Suggestion");
-                    gameList.addAll(suggestion);
-                }
-                /*realmChangeListener=new RealmChangeListener() {
-                    boolean suggestionFlag=false;
-                    @Override
-                    public void onChange() {
-                        if(suggestion!=null && suggestion.size()!=0){
-                            if(!suggestionFlag)
-                                gameList.add("Suggestion");
-                            suggestionFlag=true;
-                            gameList.addAll(suggestion);
-                            adapterDisplayApp.notifyDataSetChanged();
-                        }
-                    }
-                };
-                suggestion.addChangeListener(realmChangeListener);*/
-
-                adapterDisplayApp.notifyDataSetChanged();
-                applicationInfoMap= (Map<String, ApplicationInfo>) responseMap.get(HomeView.APPLICATION_INFO_MAP);
-                //check for new application is install or not
-                packageList=(List<String>) responseMap.get(HomeView.NEW_PACKAGE_LIST);
-                if(packageList.size()!=0) {
-                    loadDataFromRest();
-                }
-
-            }
-        }.execute();
-
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.appRecycleView);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL));
-        DefaultItemAnimator defaultItemAnimator = new DefaultItemAnimator();
-        defaultItemAnimator.setAddDuration(1000);
-        defaultItemAnimator.setRemoveDuration(1000);
-        recyclerView.setItemAnimator(defaultItemAnimator);
-        recyclerView.setAdapter(adapterDisplayApp);
-        recyclerView.addOnItemTouchListener(new RecyclerTouchListner(getApplicationContext(), recyclerView, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                Intent intent = new Intent(HomeView.this, AppDescriptionActivity.class);
-                if (gameList.get(position) instanceof ApplicationInfo) {
-                    intent.putExtra("APPLICATION",  ((ApplicationInfo) gameList.get(position)).packageName);
-                    intent.putExtra(VideoFragment.LABEL_NAME,((ApplicationInfo) gameList.get(position)).loadLabel(getPackageManager()));
-                    intent.putExtra(VideoFragment.SOURCE_DIR,((ApplicationInfo) gameList.get(position)).sourceDir);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        ImageView imageView1 = (ImageView) view.findViewById(R.id.appLogo);
-                        /*ActivityOptionsCompat options = ActivityOptionsCompat.
-                                makeSceneTransitionAnimation(HomeView.this, imageView1, imageView1.getTransitionName());*/
-                        startActivity(intent/*, options.toBundle()*/);
-                    } else {
-                        startActivity(intent);
-                    }
-                }
-                if(gameList.get(position) instanceof GameResponseModel){
-                    intent.putExtra("APPLICATION",((GameResponseModel) gameList.get(position)).getPackagename());
-                    startActivity(intent);
-                }
-            }
-
-            @Override
-            public void onLongClick(View view, int position) {
-            }
-        }));
     }
 
     private void loadDataFromRest() {
@@ -440,25 +456,6 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                         Toast.makeText(HomeView.this, "Exception " + throwable.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
-
-                /*//Subscribe to mqtt topic for SUGGESTION
-                new MqttController(client).subcibeTopic(android_id+SUGGESTION,new CallBackMqtt() {
-                    @Override
-                    public void onMessageRecive(GameResponseModel gameResponseModel) {
-
-                        saveDataToRealm(gameResponseModel,true);
-                        //response receive from mqtt server
-                        if (gameResponseModel.getIsgame()) {
-                            gameList.add(gameResponseModel);
-                            adapterDisplayApp.notifyItemInserted(gameList.size()-1);
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        Toast.makeText(HomeView.this, "Exception " + throwable.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });*/
 
                 //make rest call to find the game from package List
                 new RestCall(HomeView.this).sendPackageList(packageModel);
@@ -529,7 +526,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     private void wifiSwitchIsOff() {
         wifiSwitch.setChecked(false);
         Snackbar.make(coordinatorLayout, getString(R.string.turn_on_wifi), Snackbar.LENGTH_LONG)
-                .setAction("turn on", new View.OnClickListener() {
+                .setAction(getResources().getString(R.string.turn_on), new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         startActivityForResult(new Intent(Settings.ACTION_WIFI_SETTINGS), TURN_ON_WIFI);
@@ -643,9 +640,9 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     }
 
     private void settingDialog() {
-        final Dialog dialog = new Dialog(HomeView.this);
+        final Dialog dialog = new Dialog(HomeView.this,R.style.PauseDialog);
         dialog.setContentView(R.layout.setting_dialog);
-        dialog.setTitle("Update Profile");
+        //dialog.setTitle(getResources().getString(R.string.update_profile));
 
         Button update = (Button) dialog.findViewById(R.id.update);
         final EditText userName1 = (EditText) dialog.findViewById(R.id.userName);
@@ -778,7 +775,8 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
     public void deviceState(boolean flag) {
         if (bluetoothSwitch.isChecked() && !flag) {
             bluetoothSwitch.setChecked(false);
-            Snackbar.make(coordinatorLayout, "Turn on Bluetooth", Snackbar.LENGTH_LONG).setAction("TurnOn", new View.OnClickListener() {
+            Snackbar.make(coordinatorLayout, getResources().getString(R.string.turn_on_bluethooth), Snackbar.LENGTH_LONG)
+                    .setAction(getResources().getString(R.string.turn_on), new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     turnOnBluetoothIntent();

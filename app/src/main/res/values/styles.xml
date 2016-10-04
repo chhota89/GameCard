@@ -47,4 +47,14 @@
         <item name="android:textColor">@color/textColorPrimary</item>
     </style>
 
+
+    <style name="PauseDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowAnimationStyle">@style/PauseDialogAnimation</item>
+    </style>
+
+    <style name="PauseDialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/dialog_anim</item>
+        <!--<item name="android:windowExitAnimation">@anim/fadeout</item>-->
+    </style>
+
 </resources>
