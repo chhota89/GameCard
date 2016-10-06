@@ -31,6 +31,7 @@ import com.gamecard.view.ImageFragment;
 import com.gamecard.view.VideoFragment;
 import com.gamecard.viewholder.GameInfoViewHoldr;
 import com.gamecard.viewholder.VideoDisplayViewHolder;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.exoplayer.VideoSurfaceView;
 
 import java.util.LinkedList;
@@ -46,25 +47,30 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
     private static final int VIDEO_TYPE = 0;
     private static final int VIDEO_DISPLAY_TYPE = 1;
     private static final int IMAGE_TYPE = 2;
-    private List<VideoDisplayModel> mVideos;
-    private GameResponseModel videos1;
-    private ImageView mApkDownload, iconImage;
-    private TextView gameTitle;
+
     private Context mContext;
+    private String mVideo_id, mGameTitle, mIconLink;
+    private List<VideoDisplayModel> mVideos;
+    private DemoPlayer mPlayer;
+    private List<String> mUrlList;
+    private DashRendererBuilder mDashRendererBuilder;
+    FrameLayout mFrameLayout;
+    private MediaController mMediaController;
+
+    private GameResponseModel videos1;
+    private ImageView iconImage;
+    private TextView gameTitle;
     private String inputTitle1, inputTitle, title, inputApk, apklink, userAgent;
     public RelativeLayout videosLayout1;
     private int j;
-    private DemoPlayer mPlayer;
     private boolean autoPlay = true;
-    private MediaController mMediaController;
     private boolean playerNeedsPrepare;
     private VideoSurfaceView videoView, videoView1;
-    private DashRendererBuilder mDashRendererBuilder;
-    FrameLayout mFrameLayout;
-    private List<String> mUrlList;
+
     private List<String> videoList1 , videoListLink, video_listId, video_listUrl;
-    String[] strArray, strArray1;
-    private String mVideo_id, mGameTitle, mIconLink;
+
+
+
 
     public AdapterVideoDisplay(Context context, String video_id, String game_title, String icon_link,
                                List<VideoDisplayModel> videos2, DemoPlayer player, List<String> urlList,
@@ -145,11 +151,11 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
             if (holder.getItemViewType() == VIDEO_TYPE) {
                 iconImage = (ImageView) holder.itemView.findViewById(R.id.icon_image);
                 gameTitle = (TextView) holder.itemView.findViewById(R.id.game_title);
-                mApkDownload = (ImageView) holder.itemView.findViewById(R.id.apkDownload1);
+              //  apkDownload1 = (ImageView) holder.itemView.findViewById(R.id.apkDownload1);
 
+                mMediaController.hide();
                 setGameName(gameTitle, mGameTitle);
                 Glide.with(mContext).load(mIconLink).into(iconImage);
-                mMediaController.hide();
 
                 video_listId = new LinkedList<>();
                 video_listUrl = new LinkedList<>();
@@ -231,13 +237,9 @@ public class AdapterVideoDisplay extends RecyclerView.Adapter<RecyclerView.ViewH
                             inputTitle = title.replace(" ", "_");
                             inputTitle1 = inputTitle.trim();
 
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                        AppDescriptionActivity activity = new AppDescriptionActivity();
-                        try {
+                            AppDescriptionActivity activity = new AppDescriptionActivity();
                             activity.performDownloads(inputApk, inputTitle1);
+
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
