@@ -35,5 +35,8 @@
     <string name="turn_on_bluethooth">Turn on Bluetooth</string>
     <string name="continue_playing">Continue playing</string>
     <string name="suggestion">Suggestion</string>
+    <string name="no_space_avilable">No space avilable</string>
+    <string name="make_some_space">Make some space in SD card.</string>
+    <string name="open">Open</string>
 
 </resources>

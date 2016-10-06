@@ -1,17 +1,22 @@
 package com.gamecard.utility;
 
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.gamecard.R;
+import com.gamecard.view.HomeView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,6 +37,8 @@ public class BluethoothFileReciver extends AsyncTask<String, Void, String> {
     ProgressDialog progressDialog;
     private Context context;
     File file;
+    NotificationCompat.Builder mBuilder;
+    NotificationManager mNotificationManager;
 
     public BluethoothFileReciver(Context context, BluetoothAdapter adapter) {
         this.context = context;
@@ -48,6 +55,12 @@ public class BluethoothFileReciver extends AsyncTask<String, Void, String> {
         } catch (IOException e) {
         }
         mmServerSocket = tmp;
+        Bitmap largeIcon = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher_game_center);
+        mBuilder = new NotificationCompat.Builder(context);
+        mBuilder.setLargeIcon(largeIcon);
+        mBuilder.setSmallIcon(R.mipmap.ic_launcher_game_center);
+        mBuilder.setContentTitle("Receiving game started ");
+        mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     @Override
@@ -102,6 +115,10 @@ public class BluethoothFileReciver extends AsyncTask<String, Void, String> {
     @Override
     protected void onProgressUpdate(Void... progress) {
         progressDialog.show();
+        // Sets an activity indicator for an operation of indeterminate length
+        mBuilder.setProgress(0, 0, true);
+        // Issues the notification
+        mNotificationManager.notify(Constant.RECEIVE_BLUETOOTH_NOTIFICATION, mBuilder.build());
     }
 
     /**
@@ -118,5 +135,12 @@ public class BluethoothFileReciver extends AsyncTask<String, Void, String> {
         }
         if (progressDialog.isShowing())
             progressDialog.hide();
+
+        mBuilder.setContentText("Receiving game Finish.").setProgress(100,100,true);
+        // Issues the notification
+        mNotificationManager.notify(Constant.RECEIVE_BLUETOOTH_NOTIFICATION, mBuilder.build());
+
+        //Set bluetoothAsyncTaskStarted variable to false. i.e No Bluetooth async task is started
+        HomeView.bluetoothAsyncTaskStarted=false;
     }
 }

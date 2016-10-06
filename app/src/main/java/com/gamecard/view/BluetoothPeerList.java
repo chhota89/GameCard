@@ -1,12 +1,16 @@
 package com.gamecard.view;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +18,7 @@ import android.os.ResultReceiver;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,6 +33,7 @@ import com.gamecard.adapter.AdapterBluethooth;
 import com.gamecard.callback.CallBackBluetooth;
 import com.gamecard.callback.ClickListener;
 import com.gamecard.utility.BluetoothBroadcastReceiver;
+import com.gamecard.utility.Constant;
 import com.gamecard.utility.FIleSendBluetooth;
 
 import java.io.File;
@@ -56,6 +62,10 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     CoordinatorLayout coordinatorLayout;
     ProgressDialog progressDialog;
     String sourceDir, loadLabel;
+    NotificationCompat.Builder mBuilder;
+    NotificationManager mNotificationManager;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +84,13 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
      //   applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
         loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
+
+        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher_game_center);
+        mBuilder = new NotificationCompat.Builder(this);
+        mBuilder.setLargeIcon(largeIcon);
+        mBuilder.setSmallIcon(R.mipmap.ic_launcher_game_center);
+        mBuilder.setContentTitle("Sending game "+loadLabel);
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         deviceList=new ArrayList<>();
         recyclerView = (RecyclerView) findViewById(R.id.peerList);
@@ -94,10 +111,13 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
 
                                 int percentage = resultData.getInt("Progress", 0);
                                 mProgressDialog.setProgress(percentage);
+                                mBuilder.setProgress(100, percentage, false);
+                                mBuilder.setContentText("progress ... "+percentage+" %");
 
                                 if (percentage == 100) {
                                     mProgressDialog.hide();
                                     mProgressDialog=null;
+                                    mBuilder.setContentText("Sending Finish.").setProgress(0,0,false);
                                 }
                             }
                             else{
@@ -110,6 +130,9 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
                                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                                 mProgressDialog.show();
                             }
+
+                            // notificationID allows you to update the notification later on.
+                            mNotificationManager.notify(Constant.SEND_BLUETOOTH_NOTIFICATION, mBuilder.build());
                         }
                     }
                 });

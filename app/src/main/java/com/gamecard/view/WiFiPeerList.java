@@ -1,5 +1,6 @@
 package com.gamecard.view;
 
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,6 +20,7 @@ import android.os.ResultReceiver;
 import android.provider.Settings;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -63,6 +65,8 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
     ProgressDialog progressDialog;
     CoordinatorLayout coordinatorLayout;
     String sourceDir, loadLabel;
+    NotificationCompat.Builder mBuilder;
+    NotificationManager mNotificationManager;
 
 
     @Override
@@ -75,6 +79,11 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
       //  applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
         loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
+
+        mBuilder = new NotificationCompat.Builder(this);
+        mBuilder.setSmallIcon(R.mipmap.ic_launcher_game_center);
+        mBuilder.setContentTitle("Sending game "+loadLabel);
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         progressDialog = new ProgressDialog(WiFiPeerList.this);
         progressDialog.setMessage("Searching ...");
@@ -251,10 +260,13 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
 
                             int percentage = resultData.getInt(Constant.PROGRESS, 0);
                             mProgressDialog.setProgress(percentage);
-
+                            mBuilder.setProgress(100, percentage, false);
+                            mBuilder.setContentText("progress ... "+percentage+" %");
                             if (percentage == 100) {
                                 mProgressDialog.hide();
                                 mProgressDialog=null;
+                                mBuilder.setContentText("Sending Finish.").setProgress(0,0,false);
+
                             }
                         }
                         else{
@@ -267,6 +279,7 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
                             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                             mProgressDialog.show();
                         }
+                        mNotificationManager.notify(Constant.SEND_WIFI_NOTIFICATION, mBuilder.build());
                     }
                 }
             });

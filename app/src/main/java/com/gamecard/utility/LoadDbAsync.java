@@ -53,7 +53,7 @@ public class LoadDbAsync extends AsyncTask<Void, Void, Map<String,Object>> {
 
 
         // Build the query looking at all users:
-        RealmResults<GameResponseModel> realmResults = realm.where(GameResponseModel.class).findAll();
+        RealmResults<GameResponseModel> realmResults = realm.where(GameResponseModel.class).equalTo("suggestion",false).findAll();
 
         genrateList(realmResults);
 
