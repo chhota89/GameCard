@@ -98,6 +98,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
     ViewPager viewPager;
     String packageName;
     MediaController mMediaController;
+    View semiTransparent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +106,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_app_description);
         realm=Realm.getInstance(AppDescriptionActivity.this);
         viewPager=(ViewPager)findViewById(R.id.viewpager);
+        semiTransparent = findViewById(R.id.semiTransparent);
 
         //applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
@@ -118,19 +120,19 @@ public class AppDescriptionActivity extends AppCompatActivity {
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                if(position == 0){
+
+                if(videoFragment.isFlag() && position == 0) {
+                    apkDownload1.setVisibility(View.INVISIBLE);
                     fab.hideMenu(false);
-                    apkDownload1.setVisibility(ImageView.INVISIBLE);
-                }else{
+                } else {
+                    apkDownload1.setVisibility(View.VISIBLE);
                     fab.showMenu(false);
-                    apkDownload1.setVisibility(ImageView.VISIBLE);
                 }
             }
 
             @Override
             public void onPageSelected(int position) {
                 videoFragment.pausePlayer();
-
 
                 if(mMediaController.isShowing()) {
                     mMediaController.hide();
@@ -145,21 +147,58 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
         View rootView = View.inflate(this,R.layout.activity_app_details,null);
         coordinatorLayout1=(CoordinatorLayout) rootView.findViewById(R.id.coordinatorLayout);
+
         bluetooth1 = (ImageView) findViewById(R.id.material_design_floating_action_bluetooth);
         fab = (FloatingActionMenu) findViewById(R.id.material_design_android_floating_action_menu);
         wifi1 = (ImageView) findViewById(R.id.material_design_floating_action_wifi);
         share1 = (ImageView) findViewById(R.id.material_design_floating_action_share);
         open1 = (ImageView) findViewById(R.id.material_design_floating_action_open);
 
-      /*  fab.setOnClickListener(new View.OnClickListener() {
+        fab.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
-            public void onClick(View view) {
-                View root2 = View.inflate(AppDescriptionActivity.this,R.layout.fragment_image_layout,null);
-                ImageView image2 = (ImageView) root2.findViewById(R.id.appImage);
-                Animation in = AnimationUtils.loadAnimation(AppDescriptionActivity.this, R.anim.fade_out);
-                image2.startAnimation(in);
+            public void onMenuToggle(boolean opened) {
+                if(fab.isOpened()) {
+
+                    Animation alpha_in = AnimationUtils.loadAnimation(AppDescriptionActivity.this,
+                            R.anim.fab_alpha_in);
+                    alpha_in.setDuration(300);
+                    semiTransparent.startAnimation(alpha_in);
+                    alpha_in.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            semiTransparent.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+                        }
+                    });
+                } else {
+                    Animation alpha_out = AnimationUtils.loadAnimation(AppDescriptionActivity.this,
+                            R.anim.fab_alpha_out);
+                    alpha_out.setDuration(300);
+                    semiTransparent.startAnimation(alpha_out);
+                    alpha_out.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            semiTransparent.setVisibility(View.GONE);
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+                        }
+                    });
+                }
             }
-        });*/
+        });
 
         bluetooth1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -507,7 +546,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
 
                 if(position==0){
                    videoFragment=VideoFragment.newInstance(vedioLink, urlList, sourceDir,loadLabel,
-                            packageName, mGameTitle, mIconLink, mMediaController);
+                            packageName, mGameTitle, mIconLink, mMediaController, apkDownload1, fab);
                     return  videoFragment;
                 }
 
