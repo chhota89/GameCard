@@ -17,4 +17,5 @@ public class Constant {
     public static final int RECEIVE_WIFI_NOTIFICATION=1113;
     public static final int RECEIVE_BLUETOOTH_NOTIFICATION=1114;
 
+
 }

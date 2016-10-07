@@ -1,6 +1,7 @@
 package com.gamecard.view;
 
 import android.Manifest;
+import android.animation.Animator;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -39,6 +40,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -255,6 +257,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
         receiveFile = (TextView) findViewById(R.id.reciveFile);
         bluetoothSwitch = (SwitchButton) findViewById(R.id.bluetooth);
+        wifiSwitch = (SwitchButton) findViewById(R.id.switchButton);
         appBarLayout = (AppBarLayout) findViewById(R.id.appBarLayout);
         recyclerView = (RecyclerView) findViewById(R.id.appRecycleView);
 
@@ -333,7 +336,6 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             }
         });
 
-        wifiSwitch = (SwitchButton) findViewById(R.id.switchButton);
         wifiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -350,18 +352,14 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
                                         }
                                     }).show();
 
-                            if(FileUtility.checkSpaceInSDcard()) {
-                                //Start the Receiver thread.
+                            manager.createGroup(channel, null);
+
+                            //Start the Receiver thread.
                                 if (Build.VERSION.SDK_INT >= 23)
                                     takeRunTimePermissionForStorage(WIFI_READ_WRITE_PERMISSION);
                                 else
                                     startWIfiReciver();
-                            }else{
-                                //Show alert dialog and redirect to file system
-                                showNoSpaceAlert();
-                                wifiSwitch.setChecked(false);
-                            }
-                            manager.createGroup(channel, null);
+
                             //manager.discoverPeers(channel, null);
                         }else{
                             //Show alert dialog and redirect to file system
@@ -386,13 +384,13 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         alertDialog.setIcon(R.mipmap.ic_launcher_game_center);
         alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.open)
                 , new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setDataAndType(Uri.fromFile(Environment.getExternalStorageDirectory()), "*/*");
-                startActivity(intent);
-            }
-        });
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.setDataAndType(Uri.fromFile(Environment.getExternalStorageDirectory()), "*/*");
+                        startActivity(intent);
+                    }
+                });
         alertDialog.show();
     }
     private void initComponent(){
@@ -796,7 +794,7 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
         switch (requestCode) {
             case BLUETOOTH_READ_WRITE_PERMISSION:
                 if (grantResults.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                        startBluetoothReciver();
+                    startBluetoothReciver();
                 }
                 break;
             case WIFI_READ_WRITE_PERMISSION:
@@ -822,12 +820,13 @@ public class HomeView extends AppCompatActivity implements CallBackWifiBroadcast
             bluetoothSwitch.setChecked(false);
             Snackbar.make(coordinatorLayout, getResources().getString(R.string.turn_on_bluethooth), Snackbar.LENGTH_LONG)
                     .setAction(getResources().getString(R.string.turn_on), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    turnOnBluetoothIntent();
+                        @Override
+                        public void onClick(View v) {
+                            turnOnBluetoothIntent();
 
-                }
-            }).show();
+                        }
+                    }).show();
         }
     }
+
 }

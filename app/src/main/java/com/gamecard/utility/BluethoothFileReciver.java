@@ -136,7 +136,7 @@ public class BluethoothFileReciver extends AsyncTask<String, Void, String> {
         if (progressDialog.isShowing())
             progressDialog.hide();
 
-        mBuilder.setContentText("Receiving game Finish.").setProgress(100,100,true);
+        mBuilder.setContentText("Receiving game Finish.").setProgress(100,100,false);
         // Issues the notification
         mNotificationManager.notify(Constant.RECEIVE_BLUETOOTH_NOTIFICATION, mBuilder.build());
 

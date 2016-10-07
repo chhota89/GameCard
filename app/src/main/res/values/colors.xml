@@ -9,5 +9,5 @@
     <color name="textColorPrimary">#ffffff</color>
     <color name="matmaila_white">#FFDFDDDD</color>
     <color name="common_plus_signin_btn_text_dark_disabled">#FFAAAAAA</color>
-    <color name="sideColor">#ff8A65</color>
+    <color name="sideColor">#FFAAAAAA</color>
 </resources>

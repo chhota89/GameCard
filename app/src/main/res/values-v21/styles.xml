@@ -1,1 +1,5 @@
-<resources></resources>
+<resources>
+    <style name="PauseDialog" parent="@android:style/Theme.Holo.Dialog.NoActionBar">
+        <item name="android:windowAnimationStyle">@style/PauseDialogAnimation</item>
+    </style>
+</resources>

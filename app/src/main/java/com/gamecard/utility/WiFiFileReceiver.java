@@ -39,6 +39,7 @@ public class WiFiFileReceiver extends AsyncTask<String, Void, String> {
     String FILE_NAME = "";
     ProgressDialog progressDialog;
     private Context context;
+
     NotificationCompat.Builder mBuilder;
     NotificationManager mNotificationManager;
 
@@ -131,7 +132,7 @@ public class WiFiFileReceiver extends AsyncTask<String, Void, String> {
         if (progressDialog.isShowing())
             progressDialog.hide();
 
-        mBuilder.setContentText("Receiving game Finish.").setProgress(100,100,true);
+        mBuilder.setContentText("Receiving game Finish.").setProgress(100,100,false);
         // Issues the notification
         mNotificationManager.notify(Constant.RECEIVE_WIFI_NOTIFICATION, mBuilder.build());
 

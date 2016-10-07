@@ -17,7 +17,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.MediaController;
+import android.widget.ProgressBar;
 
 import com.gamecard.R;
 import com.gamecard.adapter.AdapterVideoDisplay;
@@ -29,6 +31,7 @@ import com.gamecard.exoplayer.DemoUtil;
 import com.gamecard.exoplayer.EventLogger;
 import com.gamecard.model.VideoDisplayModel;
 import com.gamecard.utility.YoutubeIdConverter;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.youtube.player.YouTubePlayerFragment;
 
 import java.util.ArrayList;
@@ -66,7 +69,10 @@ public class VideoFragment extends Fragment {
     public static boolean vedioPlay = true;
     public static int positionToPlay = 0;
     FrameLayout frameLayout;
-
+    private ProgressBar progressBar;
+    static ImageView mApkDownload;
+    static FloatingActionMenu mFab;
+    boolean flag;
 
     public VideoFragment() {
         // Required empty public constructor
@@ -83,7 +89,8 @@ public class VideoFragment extends Fragment {
     // TODO: Rename and change types and number of parameters
     public static VideoFragment newInstance(String param1, List<String> urlList, String sourceDir, CharSequence labelName,
                                             String packageName1, String gameTitle, String iconLink,
-                                            MediaController mediaController) {
+                                            MediaController mediaController, ImageView apkDownload,
+                                            FloatingActionMenu fab) {
         VideoFragment fragment = new VideoFragment();
         Bundle args = new Bundle();
         args.putString(YOUTUBE_FULL_LINK, param1);
@@ -96,6 +103,8 @@ public class VideoFragment extends Fragment {
 
         fragment.setArguments(args);
         mMediaController = mediaController;
+        mApkDownload = apkDownload;
+        mFab = fab;
         return fragment;
     }
 
@@ -136,6 +145,7 @@ public class VideoFragment extends Fragment {
         //Initializing the RecyclerView
         recyclerView = (RecyclerView) view.findViewById(R.id.videoDisplayList);
         frameLayout = (FrameLayout) view.findViewById(R.id.youtube_layout);
+        progressBar = (ProgressBar) view.findViewById(R.id.progress);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
@@ -146,6 +156,7 @@ public class VideoFragment extends Fragment {
             public void onResponse(List<VideoDisplayModel> videoResponseModel) {
                 Log.i(TAG, "onResponseCalled:.");
                 videoList = videoResponseModel;
+                progressBar.setVisibility(View.GONE);
                 videoList.add(0, null);
                 adapter = new AdapterVideoDisplay(myContext, mVideo_id, mGameTitle, mIconLink,
                         videoList, player, mUrlList, dashRendererBuilder, frameLayout, mMediaController);
@@ -159,15 +170,24 @@ public class VideoFragment extends Fragment {
                     @Override
                     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                         super.onScrollStateChanged(recyclerView, newState);
+
                         if(newState==RecyclerView.SCROLL_STATE_DRAGGING){
                             Log.i(TAG, "onScrollStateChanged:scroll ");
                             if(mMediaController.isShowing())
                                 mMediaController.hide();
-
                         }
                         if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                             //Call your method here for next set of data
                             int position = linearLayoutManager.findFirstVisibleItemPosition();
+                            if(position == 0) {
+                                flag = false;
+                                mFab.showMenu(false);
+                                mApkDownload.setVisibility(View.VISIBLE);
+                            } else {
+                                flag = true;
+                                mFab.hideMenu(false);
+                                mApkDownload.setVisibility(View.INVISIBLE);
+                            }
                             Rect rect = new Rect();
                             linearLayoutManager.findViewByPosition(position).getGlobalVisibleRect(rect);
 
@@ -206,6 +226,10 @@ public class VideoFragment extends Fragment {
         return view;
     }
 
+    public boolean isFlag() {
+        return flag;
+    }
+
     private void prepareExoPlayer() {
         if (player == null) {
 
@@ -238,7 +262,11 @@ public class VideoFragment extends Fragment {
     }
 
     public void pausePlayer(){
-        player.stopDemoPlayer();
+        try {
+            player.stopDemoPlayer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void releasePlayer() {

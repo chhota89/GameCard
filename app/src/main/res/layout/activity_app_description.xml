@@ -13,11 +13,12 @@
         android:layout_height="match_parent"
         android:visibility="visible">
 
-        <android.support.v4.view.ViewPager
-            android:id="@+id/viewpager"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible" />
+
 
         <View
             android:visibility="invisible"
@@ -27,7 +28,6 @@
             android:background="#99ffffff" />
 
     </FrameLayout>
-
 
     <GridView
         android:id="@+id/bottom_sheet"
@@ -41,4 +41,5 @@
     <include layout="@layout/material_design_floating_action_menu" />
 
     <include layout="@layout/activity_download_view" />
+
 </android.support.design.widget.CoordinatorLayout>
