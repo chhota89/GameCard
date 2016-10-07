@@ -8,7 +8,6 @@ import android.app.PendingIntent;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -30,21 +29,15 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -52,7 +45,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.gamecard.R;
-import com.gamecard.adapter.BottomSheetAdapter;
 import com.gamecard.model.GameResponseModel;
 import com.gamecard.model.VedioImageLinkModel;
 import com.gamecard.utility.Constant;
@@ -106,7 +98,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_app_description);
         realm=Realm.getInstance(AppDescriptionActivity.this);
         viewPager=(ViewPager)findViewById(R.id.viewpager);
-        semiTransparent = findViewById(R.id.semiTransparent);
+        semiTransparent=findViewById(R.id.semiTransparent);
 
         //applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
@@ -154,6 +146,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
         share1 = (ImageView) findViewById(R.id.material_design_floating_action_share);
         open1 = (ImageView) findViewById(R.id.material_design_floating_action_open);
 
+
         fab.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
             public void onMenuToggle(boolean opened) {
@@ -199,6 +192,7 @@ public class AppDescriptionActivity extends AppCompatActivity {
                 }
             }
         });
+
 
         bluetooth1.setOnClickListener(new View.OnClickListener() {
             @Override

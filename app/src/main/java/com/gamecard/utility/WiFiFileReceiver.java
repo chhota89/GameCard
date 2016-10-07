@@ -1,12 +1,19 @@
 package com.gamecard.utility;
 
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import com.gamecard.R;
+import com.gamecard.view.HomeView;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -33,10 +40,19 @@ public class WiFiFileReceiver extends AsyncTask<String, Void, String> {
     ProgressDialog progressDialog;
     private Context context;
 
+    NotificationCompat.Builder mBuilder;
+    NotificationManager mNotificationManager;
+
     public WiFiFileReceiver(Context context) {
         this.context = context;
         progressDialog = new ProgressDialog(context);
         progressDialog.setMessage("Downloading the file");
+        Bitmap largeIcon = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher_game_center);
+        mBuilder = new NotificationCompat.Builder(context);
+        mBuilder.setLargeIcon(largeIcon);
+        mBuilder.setSmallIcon(R.mipmap.ic_launcher_game_center);
+        mBuilder.setContentTitle("Receiving game started ");
+        mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     @Override
@@ -95,6 +111,10 @@ public class WiFiFileReceiver extends AsyncTask<String, Void, String> {
     @Override
     protected void onProgressUpdate(Void... progress) {
         progressDialog.show();
+        // Sets an activity indicator for an operation of indeterminate length
+        mBuilder.setProgress(0, 0, true);
+        // Issues the notification
+        mNotificationManager.notify(Constant.RECEIVE_WIFI_NOTIFICATION, mBuilder.build());
     }
 
     /**
@@ -111,5 +131,11 @@ public class WiFiFileReceiver extends AsyncTask<String, Void, String> {
         }
         if (progressDialog.isShowing())
             progressDialog.hide();
+
+        mBuilder.setContentText("Receiving game Finish.").setProgress(100,100,false);
+        // Issues the notification
+        mNotificationManager.notify(Constant.RECEIVE_WIFI_NOTIFICATION, mBuilder.build());
+
+        HomeView.wiFiAsyncTaskStarted=false;
     }
 }

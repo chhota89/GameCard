@@ -1,12 +1,16 @@
 package com.gamecard.view;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +18,7 @@ import android.os.ResultReceiver;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,13 +32,17 @@ import com.gamecard.R;
 import com.gamecard.adapter.AdapterBluethooth;
 import com.gamecard.callback.CallBackBluetooth;
 import com.gamecard.callback.ClickListener;
+import com.gamecard.utility.AppController;
 import com.gamecard.utility.BluetoothBroadcastReceiver;
+import com.gamecard.utility.Constant;
 import com.gamecard.utility.FIleSendBluetooth;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 public class BluetoothPeerList extends AppCompatActivity implements CallBackBluetooth{
 
@@ -56,10 +65,19 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     CoordinatorLayout coordinatorLayout;
     ProgressDialog progressDialog;
     String sourceDir, loadLabel;
+    @Inject
+    NotificationCompat.Builder mBuilder;
+    @Inject
+    NotificationManager mNotificationManager;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ((AppController)getApplication()).getCommonComponent().inject(this);
+
         setContentView(R.layout.activity_bluethooth_view);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -74,6 +92,9 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
      //   applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
         loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
+
+
+        mBuilder.setContentTitle("Sending game "+loadLabel);
 
         deviceList=new ArrayList<>();
         recyclerView = (RecyclerView) findViewById(R.id.peerList);
@@ -94,10 +115,13 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
 
                                 int percentage = resultData.getInt("Progress", 0);
                                 mProgressDialog.setProgress(percentage);
+                                mBuilder.setProgress(100, percentage, false);
+                                mBuilder.setContentText("progress ... "+percentage+" %");
 
                                 if (percentage == 100) {
                                     mProgressDialog.hide();
                                     mProgressDialog=null;
+                                    mBuilder.setContentText("Sending Finish.").setProgress(0,0,false);
                                 }
                             }
                             else{
@@ -110,17 +134,18 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
                                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                                 mProgressDialog.show();
                             }
+
+                            // notificationID allows you to update the notification later on.
+                            mNotificationManager.notify(Constant.SEND_BLUETOOTH_NOTIFICATION, mBuilder.build());
                         }
                     }
                 });
-                // Cancel discovery because it will slow down the connection
-                mBluetoothAdapter.cancelDiscovery();
+
                 //Check for file read and write permission on android M
                 if(Build.VERSION.SDK_INT>=23)
                     takeRunTimePermissionForStorage();
                 else
                     startService(fileSendBluetooth);
-
             }
 
             @Override
@@ -146,6 +171,9 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
 
         bluetoothIntent.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         bluetoothIntent.addAction(BluetoothDevice.ACTION_FOUND);
+
+        showProgressDialog();
+
     }
 
     private void takeRunTimePermissionForStorage() {
@@ -175,30 +203,35 @@ public class BluetoothPeerList extends AppCompatActivity implements CallBackBlue
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.search_button:
-                if(Build.VERSION.SDK_INT>=23){
-                    //check for ACCESS_COARSE_LOCATION permission
-                    int hasPermission = ActivityCompat.checkSelfPermission(BluetoothPeerList.this, Manifest.permission.ACCESS_COARSE_LOCATION);
-                    if (hasPermission == PackageManager.PERMISSION_GRANTED) {
-                        mBluetoothAdapter.startDiscovery();
-                        progressDialog.show();
-                        return true;
-                    }
-
-                    ActivityCompat.requestPermissions(BluetoothPeerList.this,
-                            new String[]{
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION},
-                            REQUEST_COARSE_LOCATION_PERMISSIONS);
-                    return true;
-                }
-                else{
-                    progressDialog.show();
-                    mBluetoothAdapter.startDiscovery();
-                    return true;
-                }
+                showProgressDialog();
+                return true;
 
 
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void showProgressDialog() {
+        // Cancel discovery because it will slow down the connection
+        mBluetoothAdapter.cancelDiscovery();
+
+        if(Build.VERSION.SDK_INT>=23){
+            //check for ACCESS_COARSE_LOCATION permission
+            int hasPermission = ActivityCompat.checkSelfPermission(BluetoothPeerList.this, Manifest.permission.ACCESS_COARSE_LOCATION);
+            if (hasPermission == PackageManager.PERMISSION_GRANTED) {
+                mBluetoothAdapter.startDiscovery();
+                progressDialog.show();
+            }
+
+            ActivityCompat.requestPermissions(BluetoothPeerList.this,
+                    new String[]{
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                    REQUEST_COARSE_LOCATION_PERMISSIONS);
+        }
+        else{
+            progressDialog.show();
+            mBluetoothAdapter.startDiscovery();
         }
     }
 

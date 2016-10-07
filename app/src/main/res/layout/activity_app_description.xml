@@ -8,7 +8,7 @@
     tools:context="com.gamecard.view.AppDescriptionActivity">
 
     <FrameLayout
-        android:id="@+id/frameLayout"
+        android:id="@+id/framelayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="visible">
@@ -17,27 +17,29 @@
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        android:visibility="visible" />
+
 
         <View
+            android:visibility="invisible"
             android:id="@+id/semiTransparent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="invisible"
-            android:background="#99ffffff"/>
+            android:background="#99ffffff" />
+
     </FrameLayout>
 
     <GridView
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#dddddd"
         android:numColumns="3"
         app:behavior_hideable="true"
-        android:background="#dddddd"
         app:layout_behavior="@string/bottom_sheet_behavior" />
 
-    <include layout="@layout/material_design_floating_action_menu"/>
+    <include layout="@layout/material_design_floating_action_menu" />
 
-    <include layout="@layout/activity_download_view"/>
+    <include layout="@layout/activity_download_view" />
 
 </android.support.design.widget.CoordinatorLayout>

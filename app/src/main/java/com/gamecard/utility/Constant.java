@@ -10,6 +10,12 @@ public class Constant {
     public static final String WIFI_P2P_DEVICE="wifip2pdevice";
     public static final String PROGRESS="Progress";
     public static final String APPLICATION="APPLICATION";
-
     public static final String PACKAGE_NAME = "packagename";
+
+    public static final int SEND_WIFI_NOTIFICATION=1111;
+    public static final int SEND_BLUETOOTH_NOTIFICATION=1112;
+    public static final int RECEIVE_WIFI_NOTIFICATION=1113;
+    public static final int RECEIVE_BLUETOOTH_NOTIFICATION=1114;
+
+
 }

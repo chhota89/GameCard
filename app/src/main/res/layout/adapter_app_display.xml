@@ -4,6 +4,7 @@
     android:id="@+id/card_view"
     android:clickable="true"
     android:focusable="true"
+    android:background="@drawable/ripple_custom"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginTop="7dp"

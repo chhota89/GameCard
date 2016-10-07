@@ -1,5 +1,6 @@
 package com.gamecard.view;
 
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,6 +20,7 @@ import android.os.ResultReceiver;
 import android.provider.Settings;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -33,6 +35,7 @@ import com.gamecard.R;
 import com.gamecard.adapter.AdapterPeerList;
 import com.gamecard.callback.CallBackWifiBroadcast;
 import com.gamecard.callback.ClickListener;
+import com.gamecard.utility.AppController;
 import com.gamecard.utility.Constant;
 import com.gamecard.utility.FileSendService;
 import com.gamecard.utility.WiFiFileReceiver;
@@ -42,6 +45,8 @@ import com.gamecard.utility.WiFiDirectBroadcastReceiver;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.PeerListListener, CallBackWifiBroadcast {
 
@@ -64,10 +69,19 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
     CoordinatorLayout coordinatorLayout;
     String sourceDir, loadLabel;
 
+    @Inject
+    NotificationCompat.Builder mBuilder;
+
+    @Inject
+    NotificationManager mNotificationManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ((AppController)getApplication()).getCommonComponent().inject(this);
+
         setContentView(R.layout.activity_peer_list);
 
         coordinatorLayout=(CoordinatorLayout)findViewById(R.id.coordinatorLayout) ;
@@ -75,6 +89,9 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
       //  applicationInfo = getIntent().getParcelableExtra("APPLICATION");
         sourceDir = getIntent().getStringExtra(VideoFragment.SOURCE_DIR);
         loadLabel = getIntent().getStringExtra(VideoFragment.LABEL_NAME);
+
+
+        mBuilder.setContentTitle("Sending game "+loadLabel);
 
         progressDialog = new ProgressDialog(WiFiPeerList.this);
         progressDialog.setMessage("Searching ...");
@@ -214,7 +231,7 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
     }
 
     public void searchPerer() {
-        if(wifiIsOn){
+
             //start searching for peers
             progressDialog.show();
             manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
@@ -231,7 +248,6 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
                             Toast.LENGTH_SHORT).show();
                 }
             });
-        }
     }
 
     public void sendFile(View view) {
@@ -252,10 +268,13 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
 
                             int percentage = resultData.getInt(Constant.PROGRESS, 0);
                             mProgressDialog.setProgress(percentage);
-
+                            mBuilder.setProgress(100, percentage, false);
+                            mBuilder.setContentText("progress ... "+percentage+" %");
                             if (percentage == 100) {
                                 mProgressDialog.hide();
                                 mProgressDialog=null;
+                                mBuilder.setContentText("Sending Finish.").setProgress(0,0,false);
+
                             }
                         }
                         else{
@@ -268,6 +287,7 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
                             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                             mProgressDialog.show();
                         }
+                        mNotificationManager.notify(Constant.SEND_WIFI_NOTIFICATION, mBuilder.build());
                     }
                 }
             });
@@ -283,17 +303,10 @@ public class WiFiPeerList extends AppCompatActivity implements WifiP2pManager.Pe
         this.wifiP2pInfo = wifiInfo;
         this.device = device;
         if (wifiInfo.groupFormed) {
-            WiFiFileReceiver wiFiFileReceiver = new WiFiFileReceiver(WiFiPeerList.this);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                wiFiFileReceiver.executeOnExecutor(
-                        AsyncTask.THREAD_POOL_EXECUTOR, new String[]{null});
+            if (!wifiInfo.isGroupOwner) {
+                send.setVisibility(View.VISIBLE);
             } else
-                wiFiFileReceiver.execute();
+                send.setVisibility(View.INVISIBLE);
         }
-
-        if (!wifiInfo.isGroupOwner) {
-            send.setVisibility(View.VISIBLE);
-        } else
-            send.setVisibility(View.INVISIBLE);
     }
 }

@@ -211,6 +211,7 @@ public class VideoFragment extends Fragment {
 
                             Log.i(TAG, "onScrollStateChanged: rect " + rect.height() + "  " + rect.width());
                             Log.i(TAG, "onScrollStateChanged: rect " + lastRect.height() + "  " + lastRect.width());
+
                         }
                     }
                 });
